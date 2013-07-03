@@ -1,0 +1,21 @@
+{
+  "name": "node-unqlite",
+  "version": "0.0.1",
+  "description": "Node.js binding of UnQLite",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hideo55/node-unqlite.git"
+  },
+  "keywords": [
+    "UnQLite"
+  ],
+  "author": "Hideaki Ohno",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hideo55/node-unqlite/issues"
+  }
+}
