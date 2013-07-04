@@ -648,7 +648,7 @@ struct unqlite_vfs {
  * is called page 1.  0 is used to represent "not a page".
  * A page number is an unsigned 64-bit integer.
  */
-typedef sxu64 pgno;
+typedef sxu64 pgno_t;
 /*
  * A database disk page is represented by an instance
  * of the follwoing structure.
@@ -658,7 +658,7 @@ struct unqlite_page
 {
   unsigned char *zData;       /* Content of this page */
   void *pUserData;            /* Extra content */
-  pgno pgno;                  /* Page number for this page */
+  pgno_t pgno;                  /* Page number for this page */
 };
 /*
  * UnQLite handle to the underlying Key/Value Storage Engine (See below).
@@ -678,8 +678,8 @@ struct unqlite_kv_io
 									 */
 	unqlite_kv_methods *pMethods;   /* Underlying storage engine */
 	/* Pager methods */
-	int (*xGet)(unqlite_kv_handle,pgno,unqlite_page **);
-	int (*xLookup)(unqlite_kv_handle,pgno,unqlite_page **);
+	int (*xGet)(unqlite_kv_handle,pgno_t,unqlite_page **);
+	int (*xLookup)(unqlite_kv_handle,pgno_t,unqlite_page **);
 	int (*xNew)(unqlite_kv_handle,unqlite_page **);
 	int (*xWrite)(unqlite_page *);
 	int (*xDontWrite)(unqlite_page *);
@@ -750,7 +750,7 @@ struct unqlite_kv_methods
   int (*xInit)(unqlite_kv_engine *,int iPageSize);
   void (*xRelease)(unqlite_kv_engine *);
   int (*xConfig)(unqlite_kv_engine *,int op,va_list ap);
-  int (*xOpen)(unqlite_kv_engine *,pgno);
+  int (*xOpen)(unqlite_kv_engine *,pgno_t);
   int (*xReplace)(
 	  unqlite_kv_engine *,
 	  const void *pKey,int nKeyLen,
