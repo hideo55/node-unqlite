@@ -1,0 +1,8 @@
+.project
+.settings
+.gitignore
+.lock-wscript
+.shipit.json
+.travis.yml
+build/
+
