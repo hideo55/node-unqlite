@@ -57,6 +57,13 @@
         FatalException(try_catch);                                             \
     }
 
+#define DEFINE_CONSTANT_INTEGER(target, constant, name)                        \
+    (target)->Set(                                                             \
+        String::NewSymbol(#name),                                              \
+        Integer::New(constant),                                                \
+        static_cast<PropertyAttribute>(ReadOnly | DontDelete)                  \
+    );
+
 #if NODE_VERSION_AT_LEAST(0,11,0)
 #define __GET_ISOLATE_FOR_NEW v8::Isolate::GetCurrent(),
 #define __GET_ISOLATE_FOR_DISPOSE v8::Isolate::GetCurrent()
