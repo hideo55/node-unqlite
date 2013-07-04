@@ -1,6 +1,6 @@
 # unqlite
 
-Node.js binding of [UnQLite](http://unqlite.org/).
+Node.js binding for [UnQLite](http://unqlite.org/).
 
 ## Author
 
