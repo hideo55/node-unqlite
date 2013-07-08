@@ -21,14 +21,29 @@ public:
         NodeUnQLite* unqlite;
 
         Baton(NodeUnQLite* uql, v8::Handle<v8::Function> cb) :
-            status(UNQLITE_OK), unqlite(uql) {
+                status(UNQLITE_OK), unqlite(uql) {
             unqlite->Ref();
             request.data = this;
-            callback = v8::Persistent<v8::Function>::New(__GET_ISOLATE_FOR_NEW cb);
+            callback = v8::Persistent < v8::Function > ::New(__GET_ISOLATE_FOR_NEW cb);
         }
         virtual ~Baton() {
             unqlite->Unref();
             callback.Dispose(__GET_ISOLATE_FOR_DISPOSE);
+        }
+    };
+
+    struct OpenBaton: Baton {
+        std::string filename;
+        int mode;
+        OpenBaton(NodeUnQLite* uql, v8::Handle<v8::Function> cb, const char* filename_, int mode_) :
+                Baton(uql, cb), filename(filename_), mode(mode_) {
+        }
+    };
+
+    struct ExecBaton: Baton {
+        std::string key;
+        ExecBaton(NodeUnQLite* uql, v8::Handle<v8::Function> cb, const char* key_) :
+                Baton(uql, cb), key(key_) {
         }
     };
 
@@ -44,7 +59,6 @@ public:
 
 private:
     unqlite* db_;
-    std::string filename_;
 
     static void Work_Open(uv_work_t* req);
     static void Work_Get(uv_work_t* req);
