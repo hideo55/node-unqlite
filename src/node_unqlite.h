@@ -35,15 +35,19 @@ public:
     struct OpenBaton: Baton {
         std::string filename;
         int mode;
-        OpenBaton(NodeUnQLite* uql, v8::Handle<v8::Function> cb, const char* filename_, int mode_) :
-                Baton(uql, cb), filename(filename_), mode(mode_) {
+        OpenBaton(NodeUnQLite* uql_, v8::Handle<v8::Function> cb_, const char* filename_, int mode_) :
+                Baton(uql_, cb_), filename(filename_), mode(mode_) {
         }
     };
 
     struct ExecBaton: Baton {
         std::string key;
-        ExecBaton(NodeUnQLite* uql, v8::Handle<v8::Function> cb, const char* key_) :
-                Baton(uql, cb), key(key_) {
+        std::string value;
+        ExecBaton(NodeUnQLite* uql_, v8::Handle<v8::Function> cb_, std::string key_) :
+                Baton(uql_, cb_), key(key_), value() {
+        }
+        ExecBaton(NodeUnQLite* uql_, v8::Handle<v8::Function> cb_, std::string key_, std::string val_) :
+                Baton(uql_, cb_), key(key_), value(val_) {
         }
     };
 
@@ -59,24 +63,25 @@ public:
 
 private:
     unqlite* db_;
+    bool open;
 
     static void Work_Open(uv_work_t* req);
-    static void Work_Get(uv_work_t* req);
-    static void Work_Set(uv_work_t* req);
-    static void Work_Append(uv_work_t* req);
-    static void Work_Delete(uv_work_t* req);
+    static void Work_FetchKV(uv_work_t* req);
+    static void Work_StoreKV(uv_work_t* req);
+    static void Work_AppendKV(uv_work_t* req);
+    static void Work_DeleteKV(uv_work_t* req);
 #if NODE_VERSION_AT_LEAST(0,9,4)
     static void Work_AfterOpen(uv_work_t* req, int status);
-    static void Work_AfterGet(uv_work_t* req, int status);
-    static void Work_AfterSet(uv_work_t* req, int status);
-    static void Work_AfterAppend(uv_work_t* req, int status);
-    static void Work_AfterDelete(uv_work_t* req, int status);
+    static void Work_AfterFetchKV(uv_work_t* req, int status);
+    static void Work_AfterStoreKV(uv_work_t* req, int status);
+    static void Work_AfterAppendKV(uv_work_t* req, int status);
+    static void Work_AfterDeleteKV(uv_work_t* req, int status);
 #else
     static void Work_AfterOpen(uv_work_t* req);
-    static void Work_AfterGet(uv_work_t* req);
-    static void Work_AfterSet(uv_work_t* req);
-    static void Work_AfterAppend(uv_work_t* req);
-    static void Work_AfterDelete(uv_work_t* req);
+    static void Work_AfterFetchKV(uv_work_t* req);
+    static void Work_AfterStoreKV(uv_work_t* req);
+    static void Work_AfterAppendKV(uv_work_t* req);
+    static void Work_AfterDeleteKV(uv_work_t* req);
 #endif
 };
 
