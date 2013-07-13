@@ -12,7 +12,8 @@
   "dependencies": {
   },
   "devDependencies": {
-    "mocha": "1.8.1"
+    "mocha": "1.8.1",
+    "temp": ""
   },
   "repository": {
     "type": "git",

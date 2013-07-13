@@ -3,4 +3,4 @@
 .lock-wscript
 build
 lib/node_unqlite.node
-
+node_modules
