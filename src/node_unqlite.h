@@ -14,6 +14,8 @@ extern "C" {
 class NodeUnQLite: node::ObjectWrap {
 public:
 
+    static v8::Persistent<v8::FunctionTemplate> constructor_template;
+
     struct Baton {
         uv_work_t request;
         v8::Persistent<v8::Function> callback;
@@ -26,6 +28,7 @@ public:
             request.data = this;
             callback = v8::Persistent < v8::Function > ::New(__GET_ISOLATE_FOR_NEW cb);
         }
+
         virtual ~Baton() {
             unqlite->Unref();
             callback.Dispose(__GET_ISOLATE_FOR_DISPOSE);
@@ -35,6 +38,7 @@ public:
     struct OpenBaton: Baton {
         std::string filename;
         int mode;
+
         OpenBaton(NodeUnQLite* uql_, v8::Handle<v8::Function> cb_, const char* filename_, int mode_) :
                 Baton(uql_, cb_), filename(filename_), mode(mode_) {
         }
@@ -43,9 +47,11 @@ public:
     struct ExecBaton: Baton {
         std::string key;
         std::string value;
+
         ExecBaton(NodeUnQLite* uql_, v8::Handle<v8::Function> cb_, std::string key_) :
                 Baton(uql_, cb_), key(key_), value() {
         }
+
         ExecBaton(NodeUnQLite* uql_, v8::Handle<v8::Function> cb_, std::string key_, std::string val_) :
                 Baton(uql_, cb_), key(key_), value(val_) {
         }

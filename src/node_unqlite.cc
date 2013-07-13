@@ -8,24 +8,27 @@
 #endif
 
 #include "node_unqlite.h"
+#include <iostream>
 
 using namespace v8;
 using namespace node;
+
+Persistent<FunctionTemplate> NodeUnQLite::constructor_template;
 
 void NodeUnQLite::Init(Handle<Object> target) {
     HandleScope scope;
 
     Local < FunctionTemplate > t = FunctionTemplate::New(New);
-    t->SetClassName(String::NewSymbol("UnQLite"));
-    t->InstanceTemplate()->SetInternalFieldCount(1);
+    constructor_template = Persistent<FunctionTemplate>::New(__GET_ISOLATE_FOR_NEW t);
+    constructor_template->InstanceTemplate()->SetInternalFieldCount(1);
+    constructor_template->SetClassName(String::NewSymbol("Database"));
 
-    NODE_SET_PROTOTYPE_METHOD(t, "get", FetchKV);
-    NODE_SET_PROTOTYPE_METHOD(t, "set", StoreKV);
-    NODE_SET_PROTOTYPE_METHOD(t, "append", AppendKV);
-    NODE_SET_PROTOTYPE_METHOD(t, "delete", DeleteKV);
+    NODE_SET_PROTOTYPE_METHOD(constructor_template, "fetch", FetchKV);
+    NODE_SET_PROTOTYPE_METHOD(constructor_template, "store", StoreKV);
+    NODE_SET_PROTOTYPE_METHOD(constructor_template, "append", AppendKV);
+    NODE_SET_PROTOTYPE_METHOD(constructor_template, "delete", DeleteKV);
 
-    Persistent < Function > constructor = Persistent < Function > ::New(__GET_ISOLATE_FOR_NEW t->GetFunction());
-    target->Set(String::NewSymbol("UnQLite"), constructor);
+    target->Set(String::NewSymbol("Database"), constructor_template->GetFunction());
 }
 
 NodeUnQLite::NodeUnQLite() : db_(NULL), open(false) {
@@ -65,7 +68,7 @@ Handle<Value> NodeUnQLite::New(const Arguments& args) {
     OpenBaton* baton = new OpenBaton(uql, callback, filename.c_str(), mode);
     uv_queue_work(uv_default_loop(), &baton->request, Work_Open, Work_AfterOpen);
 
-    return scope.Close(args.This());
+    return scope.Close(args.Holder());
 }
 
 void NodeUnQLite::Work_Open(uv_work_t* req) {
@@ -74,8 +77,8 @@ void NodeUnQLite::Work_Open(uv_work_t* req) {
 
     baton->status  = unqlite_open(&(uql->db_), baton->filename.c_str(), baton->mode);
     if(baton->status != UNQLITE_OK){
-        uql->db_ = NULL;
         unqlite_close(uql->db_);
+        uql->db_ = NULL;
     }
 }
 
@@ -146,7 +149,7 @@ void NodeUnQLite::Work_FetchKV(uv_work_t* req) {
     }
 
     baton->status  = unqlite_kv_fetch(uql->db_, key.c_str(), key.size(), NULL, &val_size);
-    if(baton->status != UNQLITE_OK){
+    if(baton->status == UNQLITE_OK){
         char* buf = new char[val_size];
         baton->status  = unqlite_kv_fetch(uql->db_, key.c_str(), key.size(), buf, &val_size);
         baton->value.assign(buf, val_size);
@@ -163,35 +166,118 @@ void NodeUnQLite::Work_AfterFetchKV(uv_work_t* req){
     ExecBaton* baton = static_cast<ExecBaton*>(req->data);
     NodeUnQLite* uql = baton->unqlite;
 
-    Local<Value> argv[2];
-    bool hasError =false;
+    Local<Value> argv[3];
+    argv[1] = Local<Value>::New(String::New(baton->key.c_str(), baton->key.size()));
+    argv[2] = Local<Value>::New(String::New(baton->value.c_str(), baton->value.size()));
+    bool hasError = false;
 
     if(!uql->open){
         Local<Value> exception = Exception::Error(String::New("Not opened"));
         argv[0] = exception;
-        argv[1] = Local<Value>::New(Null());
         hasError = true;
     }
     else if (baton->status != UNQLITE_OK) {
         Local<Value> exception = Exception::Error(Integer::New(baton->status)->ToString());
         argv[0] = exception;
-        argv[1] = Local<Value>::New(Null());
         hasError = true;
     }
     else {
         argv[0] = Local<Value>::New(Null());
-        argv[1] = Local<Value>::New(String::New(baton->value.c_str(), baton->value.size()));
     }
 
     if (!baton->callback.IsEmpty() && baton->callback->IsFunction()) {
-        TRY_CATCH_CALL(uql->handle_, baton->callback, 2, argv);
+        TRY_CATCH_CALL(uql->handle_, baton->callback, 3, argv);
     }
     else if (hasError) {
-        Local<Value> args[] = { String::NewSymbol("error"), argv[0] };
-        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 2, args);
+        Local<Value> args[] = { String::NewSymbol("error"), argv[0], argv[1] };
+        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 3, args);
     }else{
-        Local<Value> args[] = { String::NewSymbol("fetch"), argv[1] };
-        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 2, args);
+        Local<Value> args[] = { String::NewSymbol("fetch"), argv[1], argv[2] };
+        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 3, args);
+    }
+
+    delete baton;
+}
+
+#if NODE_VERSION_AT_LEAST(0,9,4)
+void NodeUnQLite::Work_AfterStoreKV(uv_work_t* req, int status) {
+#else
+void NodeUnQLite::Work_AfterStoreKV(uv_work_t* req){
+#endif
+    HandleScope scope;
+    ExecBaton* baton = static_cast<ExecBaton*>(req->data);
+    NodeUnQLite* uql = baton->unqlite;
+
+    Local<Value> argv[3];
+    argv[1] = Local<Value>::New(String::New(baton->key.c_str(), baton->key.size()));
+    argv[2] = Local<Value>::New(String::New(baton->value.c_str(), baton->value.size()));
+    bool hasError = false;
+
+    if(!uql->open){
+        Local<Value> exception = Exception::Error(String::New("Not opened"));
+        argv[0] = exception;
+        hasError = true;
+    }
+    else if (baton->status != UNQLITE_OK) {
+        Local<Value> exception = Exception::Error(Integer::New(baton->status)->ToString());
+        argv[0] = exception;
+        hasError = true;
+    }
+    else {
+        argv[0] = Local<Value>::New(Null());
+    }
+
+    if (!baton->callback.IsEmpty() && baton->callback->IsFunction()) {
+        TRY_CATCH_CALL(uql->handle_, baton->callback, 3, argv);
+    }
+    else if (hasError) {
+        Local<Value> args[] = { String::NewSymbol("error"), argv[0], argv[1] };
+        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 3, args);
+    }else{
+        Local<Value> args[] = { String::NewSymbol("store"), argv[1], argv[2] };
+        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 3, args);
+    }
+
+    delete baton;
+}
+
+#if NODE_VERSION_AT_LEAST(0,9,4)
+void NodeUnQLite::Work_AfterAppendKV(uv_work_t* req, int status) {
+#else
+void NodeUnQLite::Work_AfterAppendKV(uv_work_t* req){
+#endif
+    HandleScope scope;
+    ExecBaton* baton = static_cast<ExecBaton*>(req->data);
+    NodeUnQLite* uql = baton->unqlite;
+
+    Local<Value> argv[3];
+    argv[1] = Local<Value>::New(String::New(baton->key.c_str(), baton->key.size()));
+    argv[2] = Local<Value>::New(String::New(baton->value.c_str(), baton->value.size()));
+    bool hasError = false;
+
+    if(!uql->open){
+        Local<Value> exception = Exception::Error(String::New("Not opened"));
+        argv[0] = exception;
+        hasError = true;
+    }
+    else if (baton->status != UNQLITE_OK) {
+        Local<Value> exception = Exception::Error(Integer::New(baton->status)->ToString());
+        argv[0] = exception;
+        hasError = true;
+    }
+    else {
+        argv[0] = Local<Value>::New(Null());
+    }
+
+    if (!baton->callback.IsEmpty() && baton->callback->IsFunction()) {
+        TRY_CATCH_CALL(uql->handle_, baton->callback, 3, argv);
+    }
+    else if (hasError) {
+        Local<Value> args[] = { String::NewSymbol("error"), argv[0], argv[1] };
+        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 3, args);
+    }else{
+        Local<Value> args[] = { String::NewSymbol("append"), argv[1], argv[2] };
+        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 3, args);
     }
 
     delete baton;
@@ -199,7 +285,7 @@ void NodeUnQLite::Work_AfterFetchKV(uv_work_t* req){
 
 Handle<Value> NodeUnQLite::StoreKV(const Arguments& args) {
     HandleScope scope;
-
+    std::cout << "hoge" << std::endl;
     REQ_STR_ARG(0)
     std::string key = *String::Utf8Value(args[0]->ToString());
     REQ_STR_ARG(1)
@@ -213,6 +299,8 @@ Handle<Value> NodeUnQLite::StoreKV(const Arguments& args) {
     }
 
     NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
+
+    std::cout << "HOGE" << std::endl;
 
     ExecBaton* baton = new ExecBaton(uql, callback, key, value);
     uv_queue_work(uv_default_loop(), &baton->request, Work_StoreKV, Work_AfterStoreKV);
@@ -233,46 +321,6 @@ void NodeUnQLite::Work_StoreKV(uv_work_t* req) {
     baton->status  = unqlite_kv_store(uql->db_, key.c_str(), key.size(), val.c_str(), val.size());
 }
 
-#if NODE_VERSION_AT_LEAST(0,9,4)
-void NodeUnQLite::Work_AfterStoreKV(uv_work_t* req, int status) {
-#else
-void NodeUnQLite::Work_AfterStoreKV(uv_work_t* req){
-#endif
-    HandleScope scope;
-    ExecBaton* baton = static_cast<ExecBaton*>(req->data);
-    NodeUnQLite* uql = baton->unqlite;
-
-    Local<Value> argv[1];
-    bool hasError =false;
-
-    if(!uql->open){
-        Local<Value> exception = Exception::Error(String::New("Not opened"));
-        argv[0] = exception;
-        hasError = true;
-    }
-    else if (baton->status != UNQLITE_OK) {
-        Local<Value> exception = Exception::Error(Integer::New(baton->status)->ToString());
-        argv[0] = exception;
-        hasError = true;
-    }
-    else {
-        argv[0] = Local<Value>::New(Null());
-    }
-
-    if (!baton->callback.IsEmpty() && baton->callback->IsFunction()) {
-        TRY_CATCH_CALL(uql->handle_, baton->callback, 1, argv);
-    }
-    else if (hasError) {
-        Local<Value> args[] = { String::NewSymbol("error"), argv[0] };
-        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 2, args);
-    }else{
-        Local<Value> args[] = { String::NewSymbol("store") };
-        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 1, args);
-    }
-
-    delete baton;
-}
-
 Handle<Value> NodeUnQLite::AppendKV(const Arguments& args) {
     HandleScope scope;
 
@@ -291,9 +339,9 @@ Handle<Value> NodeUnQLite::AppendKV(const Arguments& args) {
     NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
 
     ExecBaton* baton = new ExecBaton(uql, callback, key, value);
-    uv_queue_work(uv_default_loop(), &baton->request, Work_StoreKV, Work_AfterStoreKV);
+    uv_queue_work(uv_default_loop(), &baton->request, Work_AppendKV, Work_AfterAppendKV);
 
-    return scope.Close(args.This());
+    return scope.Close(args.Holder());
 }
 
 void NodeUnQLite::Work_AppendKV(uv_work_t* req) {
@@ -307,46 +355,6 @@ void NodeUnQLite::Work_AppendKV(uv_work_t* req) {
     }
 
     baton->status  = unqlite_kv_append(uql->db_, key.c_str(), key.size(), val.c_str(), val.size());
-}
-
-#if NODE_VERSION_AT_LEAST(0,9,4)
-void NodeUnQLite::Work_AfterAppendKV(uv_work_t* req, int status) {
-#else
-void NodeUnQLite::Work_AfterAppendKV(uv_work_t* req){
-#endif
-    HandleScope scope;
-    ExecBaton* baton = static_cast<ExecBaton*>(req->data);
-    NodeUnQLite* uql = baton->unqlite;
-
-    Local<Value> argv[1];
-    bool hasError =false;
-
-    if(!uql->open){
-        Local<Value> exception = Exception::Error(String::New("Not opened"));
-        argv[0] = exception;
-        hasError = true;
-    }
-    else if (baton->status != UNQLITE_OK) {
-        Local<Value> exception = Exception::Error(Integer::New(baton->status)->ToString());
-        argv[0] = exception;
-        hasError = true;
-    }
-    else {
-        argv[0] = Local<Value>::New(Null());
-    }
-
-    if (!baton->callback.IsEmpty() && baton->callback->IsFunction()) {
-        TRY_CATCH_CALL(uql->handle_, baton->callback, 1, argv);
-    }
-    else if (hasError) {
-        Local<Value> args[] = { String::NewSymbol("error"), argv[0] };
-        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 2, args);
-    }else{
-        Local<Value> args[] = { String::NewSymbol("append") };
-        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 1, args);
-    }
-
-    delete baton;
 }
 
 Handle<Value> NodeUnQLite::DeleteKV(const Arguments& args) {
@@ -391,7 +399,8 @@ void NodeUnQLite::Work_AfterDeleteKV(uv_work_t* req){
     ExecBaton* baton = static_cast<ExecBaton*>(req->data);
     NodeUnQLite* uql = baton->unqlite;
 
-    Local<Value> argv[1];
+    Local<Value> argv[2];
+    argv[1] = Local<Value>::New(String::New(baton->key.c_str(), baton->key.size()));
     bool hasError =false;
 
     if(!uql->open){
@@ -403,20 +412,19 @@ void NodeUnQLite::Work_AfterDeleteKV(uv_work_t* req){
         Local<Value> exception = Exception::Error(Integer::New(baton->status)->ToString());
         argv[0] = exception;
         hasError = true;
-    }
-    else {
+    }else{
         argv[0] = Local<Value>::New(Null());
     }
 
     if (!baton->callback.IsEmpty() && baton->callback->IsFunction()) {
-        TRY_CATCH_CALL(uql->handle_, baton->callback, 1, argv);
+        TRY_CATCH_CALL(uql->handle_, baton->callback, 2, argv);
     }
     else if (hasError) {
-        Local<Value> args[] = { String::NewSymbol("error"), argv[0] };
-        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 2, args);
+        Local<Value> args[] = { String::NewSymbol("error"), argv[0], argv[1] };
+        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 3, args);
     }else{
-        Local<Value> args[] = { String::NewSymbol("delete") };
-        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 1, args);
+        Local<Value> args[] = { String::NewSymbol("delete"), argv[1] };
+        TRY_CATCH_CALL(uql->handle_, Local<Function>::Cast((uql->handle_)->Get(String::NewSymbol("emit"))), 2, args);
     }
 
     delete baton;
@@ -426,33 +434,44 @@ void Initialize(Handle<Object> target) {
     NodeUnQLite::Init(target);
 
     // define constants
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OK, "OK");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_NOMEM, "NOMEM");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_ABORT, "ABORT");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_IOERR, "IOERR");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_CORRUPT, "CORRUPT");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_LOCKED, "LOCKED");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_BUSY, "BUSY");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_DONE, "DONE");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_PERM, "PERM");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_NOTIMPLEMENTED, "NOTIMPLEMENTED");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_NOTFOUND, "NOTFOUND");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_NOOP, "NOOP");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_INVALID, "INVALID");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_EOF, "EOF");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_UNKNOWN, "UNKNOWN");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_LIMIT, "LIMIT");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_EXISTS, "EXISTS");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_EMPTY, "EMPTY");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_COMPILE_ERR, "COMPILE_ERR");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_VM_ERR, "VM_ERR");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_FULL, "FULL");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_CANTOPEN, "CANTOPEN");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_READ_ONLY, "READ_ONLY");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_LOCKERR, "LOCKERR");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_CURSOR_MATCH_EXACT, "CURSOR_MATCH_EXACT");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_CURSOR_MATCH_LE, "CURSOR_MATCH_LE");
-    DEFINE_CONSTANT_INTEGER(target, UNQLITE_CURSOR_MATCH_GE, "CURSOR_MATCH_GE");
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OK, OK);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_NOMEM, NOMEM);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_ABORT, ABORT);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_IOERR, IOERR);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_CORRUPT, CORRUPT);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_LOCKED, LOCKED);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_BUSY, BUSY);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_DONE, DONE);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_PERM, PERM);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_NOTIMPLEMENTED, NOTIMPLEMENTED);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_NOTFOUND, NOTFOUND);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_NOOP, NOOP);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_INVALID, INVALID);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_EOF, EOF);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_UNKNOWN, UNKNOWN);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_LIMIT, LIMIT);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_EXISTS, EXISTS);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_EMPTY, EMPTY);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_COMPILE_ERR, COMPILE_ERR);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_VM_ERR, VM_ERR);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_FULL, FULL);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_CANTOPEN, CANTOPEN);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_READ_ONLY, READ_ONLY);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_LOCKERR, LOCKERR);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_CURSOR_MATCH_EXACT, CURSOR_MATCH_EXACT);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_CURSOR_MATCH_LE, CURSOR_MATCH_LE);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_CURSOR_MATCH_GE, CURSOR_MATCH_GE);
+
+    // mode
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OPEN_CREATE, OPEN_CREATE);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OPEN_READWRITE, OPEN_READWRITE);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OPEN_READONLY, OPEN_READONLY);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OPEN_MMAP, OPEN_MMAP);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OPEN_EXCLUSIVE, OPEN_EXCLUSIVE);  // VFS only
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OPEN_TEMP_DB, OPEN_TEMP_DB);      // VFS only
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OPEN_IN_MEMORY, OPEN_IN_MEMORY);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OPEN_OMIT_JOURNALING, OPEN_OMIT_JOURNALING);
+    DEFINE_CONSTANT_INTEGER(target, UNQLITE_OPEN_NOMUTEX, OPEN_NOMUTEX);
 }
 
 NODE_MODULE(node_unqlite, Initialize)
