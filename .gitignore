@@ -2,4 +2,5 @@
 .settings
 .lock-wscript
 build
+lib/node_unqlite.node
 

@@ -285,11 +285,10 @@ void NodeUnQLite::Work_AfterAppendKV(uv_work_t* req){
 
 Handle<Value> NodeUnQLite::StoreKV(const Arguments& args) {
     HandleScope scope;
-    std::cout << "hoge" << std::endl;
     REQ_STR_ARG(0)
     std::string key = *String::Utf8Value(args[0]->ToString());
     REQ_STR_ARG(1)
-    std::string value = *String::Utf8Value(args[0]->ToString());
+    std::string value = *String::Utf8Value(args[1]->ToString());
 
     int pos = 2;
 
@@ -299,8 +298,6 @@ Handle<Value> NodeUnQLite::StoreKV(const Arguments& args) {
     }
 
     NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
-
-    std::cout << "HOGE" << std::endl;
 
     ExecBaton* baton = new ExecBaton(uql, callback, key, value);
     uv_queue_work(uv_default_loop(), &baton->request, Work_StoreKV, Work_AfterStoreKV);
@@ -327,7 +324,7 @@ Handle<Value> NodeUnQLite::AppendKV(const Arguments& args) {
     REQ_STR_ARG(0)
     std::string key = *String::Utf8Value(args[0]->ToString());
     REQ_STR_ARG(1)
-    std::string value = *String::Utf8Value(args[0]->ToString());
+    std::string value = *String::Utf8Value(args[1]->ToString());
 
     int pos = 2;
 

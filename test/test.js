@@ -56,9 +56,38 @@ describe('open', function() {
 
 describe('Key/Value API', function() {
   it('store API', function(done) {
-  	var uql = new DB('test/test_set1.db');
-  	uql.on('open', function(){
-  		done();
-  	});
+    var uql = new DB('test/test_set1.db', unqlite.OPEN_IN_MEMORY);
+    uql.on('open', function() {
+      uql.store('foo', 'bar');
+      uql.on('store', function(key, value) {
+        assert.equal(key, 'foo');
+        assert.equal(value, 'bar');
+        done();
+      });
+    });
+  });
+  it('fetch API', function(done) {
+    var uql = new DB('test/test_set1.db', unqlite.OPEN_IN_MEMORY);
+    uql.on('open', function() {
+      uql.store('foo', 'bar', function(err, key, value) {
+        uql.fetch(key, function(err, key, value) {
+          assert.equal(value, 'bar');
+          done();
+        });
+      });
+    });
+  });
+  it('append API', function(done) {
+    var uql = new DB('test/test_set1.db', unqlite.OPEN_IN_MEMORY);
+    uql.on('open', function() {
+      uql.store('foo', 'bar', function() {
+        uql.append('foo', 'baz', function(err, key, value) {
+          uql.fetch(key, function(err, key, value) {
+            assert.equal(value, 'barbaz');
+            done();
+          });
+        });
+      });
+    });
   });
 });
