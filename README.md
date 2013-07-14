@@ -2,6 +2,23 @@
 
 Node.js binding for [UnQLite](http://unqlite.org/).
 
+## Requirement
+
+Node v0.6.13 or later
+
+## Usage
+
+```JavaScript
+var unqlite = require('unqlite');
+
+var db = unqlite.Database('/path/to/db', unqlite.OPEN_CREATE);
+db.on('open', function(){
+  db.store('key', 'value', function(err, key, value){
+    ...
+  });
+});
+```
+
 ## Author
 
 Hideaki Ohno  &lt;hide.o.j55{at}gmail.com&gt;
