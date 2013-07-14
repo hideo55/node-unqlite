@@ -4,7 +4,7 @@ Node.js binding for [UnQLite](http://unqlite.org/).
 
 ## Requirement
 
-Node v0.6.13 or later
+Node v0.8 or later
 
 ## Usage
 
