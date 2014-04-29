@@ -20,16 +20,16 @@ void NodeUnQLite::Init(Handle<Object> exports) {
 
     Local < FunctionTemplate > t = FunctionTemplate::New(NodeUnQLite::New);
     NanAssignPersistent(v8::FunctionTemplate, constructor_template, t);
-    constructor_template->InstanceTemplate()->SetInternalFieldCount(1);
-    constructor_template->SetClassName(NanSymbol("Database"));
+    t->InstanceTemplate()->SetInternalFieldCount(1);
+    t->SetClassName(NanSymbol("Database"));
 
-    NODE_SET_PROTOTYPE_METHOD(constructor_template, "open", Open);
-    NODE_SET_PROTOTYPE_METHOD(constructor_template, "fetch", FetchKV);
-    NODE_SET_PROTOTYPE_METHOD(constructor_template, "store", StoreKV);
-    NODE_SET_PROTOTYPE_METHOD(constructor_template, "append", AppendKV);
-    NODE_SET_PROTOTYPE_METHOD(constructor_template, "delete", DeleteKV);
+    NODE_SET_PROTOTYPE_METHOD(t, "open", Open);
+    NODE_SET_PROTOTYPE_METHOD(t, "fetch", FetchKV);
+    NODE_SET_PROTOTYPE_METHOD(t, "store", StoreKV);
+    NODE_SET_PROTOTYPE_METHOD(t, "append", AppendKV);
+    NODE_SET_PROTOTYPE_METHOD(t, "delete", DeleteKV);
 
-    exports->Set(NanSymbol("Database"), constructor_template->GetFunction());
+    exports->Set(NanSymbol("Database"), t->GetFunction());
 }
 
 NodeUnQLite::NodeUnQLite() : db_(NULL), open_(false) {
@@ -109,7 +109,7 @@ NAN_METHOD(NodeUnQLite::FetchKV) {
     NanReturnUndefined();
 }
 
-Handle<Value> NodeUnQLite::StoreKV(const Arguments& args) {
+NAN_METHOD(NodeUnQLite::StoreKV) {
     NanScope();
     REQ_STR_ARG(0)
     std::string key = *String::Utf8Value(args[0]->ToString());

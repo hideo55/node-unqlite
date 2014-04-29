@@ -3,9 +3,9 @@
 
 #define REQ_ARG_COUNT_AND_TYPE(I, TYPE) \
   if (args.Length() < (I + 1) ) { \
-      return ThrowException(Exception::RangeError(String::New("A least " #I " arguments are required"))); \
+      NanThrowRangeError("A least " #I " arguments are required"); \
   } else if (!args[I]->Is##TYPE()) { \
-      return ThrowException(Exception::TypeError(String::New("Argument " #I " must be a " #TYPE))); \
+      NanThrowTypeError("Argument " #I " must be a " #TYPE); \
   }
 
 // validate the argument type is 'function' or not.
