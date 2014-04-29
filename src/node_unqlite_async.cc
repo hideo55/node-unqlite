@@ -25,7 +25,6 @@ void OpenWorker::HandleOKCallback() {
 }
 
 // CloseWorker
-// OpenWorker
 CloseWorker::CloseWorker(NanCallback *callback, NodeUnQLite* uql) :
         NanAsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK) {
 }

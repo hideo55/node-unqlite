@@ -17,16 +17,33 @@ namespace node_unqlite {
 class NodeUnQLite: public node::ObjectWrap {
 public:
 
+    /**
+     * @brief Constructor
+     */
     NodeUnQLite();
+
+    /**
+     * @brief Destructor
+     */
     virtual ~NodeUnQLite();
 
+    /**
+     * @brief Initialize NodeUnQLite class as Node.js addon
+     */
     static void Init(v8::Handle<v8::Object> exports);
+
     static NAN_METHOD (New);
+
     static NAN_METHOD (Open);
+
     static NAN_METHOD (Close);
+
     static NAN_METHOD (StoreKV);
+
     static NAN_METHOD (AppendKV);
+
     static NAN_METHOD (DeleteKV);
+
     static NAN_METHOD (FetchKV);
 
     /**

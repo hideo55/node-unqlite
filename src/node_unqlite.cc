@@ -42,8 +42,7 @@ NodeUnQLite::NodeUnQLite() :
 
 NodeUnQLite::~NodeUnQLite() {
     if (db_ != NULL) {
-        unqlite_close(db_);
-        db_ = NULL;
+        close_db();
     }
 }
 
