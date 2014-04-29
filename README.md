@@ -3,6 +3,8 @@
 Node.js binding for [UnQLite](http://unqlite.org/).
 
 
+ [![Build Status](https://secure.travis-ci.org/hideo55/node-unqlite.png)](http://travis-ci.org/hideo55/node-unqlite)
+
 ## Usage
 
 ```JavaScript
