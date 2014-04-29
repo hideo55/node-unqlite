@@ -11,8 +11,15 @@ OpenWorker::OpenWorker(NanCallback *callback, NodeUnQLite* uql, std::string& fil
 void OpenWorker::Execute() {
     status_ = unqlite_->open_db(filename_.c_str(), mode_);
     if (status_ != UNQLITE_OK) {
+        std::string errLog;
+        unqlite_->get_error_message(errLog);
         std::stringstream ss;
-        ss << "Failed to open: " << status_ << std::endl;
+        ss << "Failed to open: ";
+        if (errLog.size() > 0) {
+            ss << errLog;
+        } else {
+            ss << status_;
+        }
         errmsg = new char[ss.str().size() + 1];
         std::memcpy((void*) errmsg, ss.str().c_str(), ss.str().size());
     }
@@ -32,8 +39,15 @@ CloseWorker::CloseWorker(NanCallback *callback, NodeUnQLite* uql) :
 void CloseWorker::Execute() {
     status_ = unqlite_->close_db();
     if (status_ != UNQLITE_OK) {
+        std::string errLog;
+        unqlite_->get_error_message(errLog);
         std::stringstream ss;
-        ss << "Failed to close: " << status_ << std::endl;
+        ss << "Failed to close: ";
+        if (errLog.size() > 0) {
+            ss << errLog;
+        } else {
+            ss << status_;
+        }
         errmsg = new char[ss.str().size() + 1];
         std::memcpy((void*) errmsg, ss.str().c_str(), ss.str().size());
     }
@@ -98,8 +112,15 @@ void AccessWorker::HandleOKCallback() {
 
 void AccessWorker::setError(const char* type) {
     if (status_ != UNQLITE_OK) {
+        std::string errLog;
+        unqlite_->get_error_message(errLog);
         std::stringstream ss;
-        ss << "Failed to " << type << ": " << status_ << std::endl;
+        ss << "Failed to " << type << ": ";
+        if (errLog.size() > 0) {
+            ss << errLog;
+        } else {
+            ss << status_;
+        }
         errmsg = new char[ss.str().size() + 1];
         std::memcpy((void*) errmsg, ss.str().c_str(), ss.str().size());
     }

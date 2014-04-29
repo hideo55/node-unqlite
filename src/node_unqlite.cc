@@ -208,6 +208,15 @@ int NodeUnQLite::delete_kv(std::string& key) {
     return unqlite_kv_delete(db_, key.c_str(), key.size());
 }
 
+void NodeUnQLite::get_error_message(std::string& message) {
+    const char* buf;
+    int bufLen;
+    unqlite_config(db_, UNQLITE_CONFIG_ERR_LOG, &buf, &bufLen);
+    if(bufLen > 0){
+        message.assign(buf, bufLen);
+    }
+}
+
 }
 
 void Initialize(Handle<Object> exports) {

@@ -98,6 +98,13 @@ public:
      */
     int delete_kv(std::string& key);
 
+    /**
+     * @brief Get error message of status code.
+     * @param[in] status Status code
+     * @param[out] Error message
+     */
+    void get_error_message(std::string& message);
+
 
 private:
     static v8::Persistent<v8::FunctionTemplate> constructor_template;
