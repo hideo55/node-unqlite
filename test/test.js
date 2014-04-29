@@ -19,15 +19,7 @@ describe('open', function() {
     });
   });
 
-  it('with callback API', function(done) {
-    var uql = new DB(dbFile);
-    uql.open(function(err) {
-      assert.equal(err, null);
-      done();
-    });
-  });
-
-  it('with EventEmitter API', function(done) {
+  it('default', function(done) {
     var uql = new DB(dbFile);
     uql.open(function(err) {
       assert.equal(err, null);
@@ -68,6 +60,16 @@ describe('open', function() {
       });
     });
   });
+  
+  it('close', function(done){
+  	      var uql = new DB(dbFile);
+      uql.open(function() {
+        uql.close(function(err){
+        	assert.equal(err, null);
+        	done();
+        });
+      });
+  })
 });
 
 describe('Key/Value API', function() {

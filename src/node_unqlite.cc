@@ -27,6 +27,7 @@ void NodeUnQLite::Init(Handle<Object> exports) {
     t->SetClassName(NanSymbol("Database"));
 
     NODE_SET_PROTOTYPE_METHOD(t, "open", Open);
+    NODE_SET_PROTOTYPE_METHOD(t, "close", Close);
     NODE_SET_PROTOTYPE_METHOD(t, "fetch", FetchKV);
     NODE_SET_PROTOTYPE_METHOD(t, "store", StoreKV);
     NODE_SET_PROTOTYPE_METHOD(t, "append", AppendKV);
