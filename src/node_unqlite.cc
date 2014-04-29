@@ -8,10 +8,13 @@
 #endif
 
 #include "node_unqlite.h"
+#include "node_unqlite_async.h"
 #include <iostream>
 
 using namespace v8;
 using namespace node;
+
+namespace node_unqlite {
 
 Persistent<FunctionTemplate> NodeUnQLite::constructor_template;
 
@@ -32,7 +35,8 @@ void NodeUnQLite::Init(Handle<Object> exports) {
     exports->Set(NanSymbol("Database"), t->GetFunction());
 }
 
-NodeUnQLite::NodeUnQLite() : db_(NULL), open_(false) {
+NodeUnQLite::NodeUnQLite() :
+        db_(NULL), open_(false) {
 }
 
 NodeUnQLite::~NodeUnQLite() {
@@ -42,25 +46,11 @@ NodeUnQLite::~NodeUnQLite() {
     }
 }
 
-NAN_METHOD(NodeUnQLite::New) {
+NAN_METHOD(NodeUnQLite::New){
     NanScope();
 
     REQ_STR_ARG(0)
     std::string filename = *String::Utf8Value(args[0]->ToString());
-
-    int pos = 1;
-
-    int mode;
-    if (args.Length() >= pos && args[pos]->IsInt32()) {
-        mode = args[pos++]->Int32Value();
-    } else {
-        mode = UNQLITE_OPEN_CREATE;
-    }
-
-    Local < Function > callback;
-    if (args.Length() >= pos && args[pos]->IsFunction()) {
-        callback = Local < Function > ::Cast(args[pos++]);
-    }
 
     NodeUnQLite* uql = new NodeUnQLite();
     uql->Wrap(args.Holder());
@@ -69,7 +59,7 @@ NAN_METHOD(NodeUnQLite::New) {
     NanReturnValue(args.Holder());
 }
 
-NAN_METHOD(NodeUnQLite::Open) {
+NAN_METHOD(NodeUnQLite::Open){
     NanScope();
 
     int pos = 0;
@@ -88,28 +78,35 @@ NAN_METHOD(NodeUnQLite::Open) {
     std::string filename = *String::Utf8Value(args.This()->Get(NanSymbol("filename")));
 
     NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new NodeUnQLite::OpenWorker(callback, uql, filename, mode));
+    NanAsyncQueueWorker(new OpenWorker(callback, uql, filename, mode));
     NanReturnUndefined();
 }
 
+NAN_METHOD(NodeUnQLite::Close) {
+    NanScope();
+    REQ_FUN_ARG(0, cb);
+    NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
+    NanCallback *callback = new NanCallback(cb);
+    NanAsyncQueueWorker(new CloseWorker(callback, uql));
+    NanReturnUndefined();
+}
 
-NAN_METHOD(NodeUnQLite::FetchKV) {
+NAN_METHOD(NodeUnQLite::FetchKV){
     NanScope();
 
     REQ_STR_ARG(0)
     std::string key = *String::Utf8Value(args[0]->ToString());
-
     REQ_FUN_ARG(1, cb);
 
     NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
 
     NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new NodeUnQLite::AccessWorker(callback, uql, T_UNQLITE_FETCH, key));
+    NanAsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_FETCH, key));
 
     NanReturnUndefined();
 }
 
-NAN_METHOD(NodeUnQLite::StoreKV) {
+NAN_METHOD(NodeUnQLite::StoreKV){
     NanScope();
     REQ_STR_ARG(0)
     std::string key = *String::Utf8Value(args[0]->ToString());
@@ -121,13 +118,12 @@ NAN_METHOD(NodeUnQLite::StoreKV) {
     NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
 
     NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new NodeUnQLite::AccessWorker(callback, uql, T_UNQLITE_STORE, key, value));
+    NanAsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_STORE, key, value));
 
     NanReturnUndefined();
 }
 
-
-NAN_METHOD(NodeUnQLite::AppendKV) {
+NAN_METHOD(NodeUnQLite::AppendKV){
     NanScope();
 
     REQ_STR_ARG(0)
@@ -140,12 +136,12 @@ NAN_METHOD(NodeUnQLite::AppendKV) {
     NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
 
     NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new NodeUnQLite::AccessWorker(callback, uql, T_UNQLITE_APPEND, key, value));
+    NanAsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_APPEND, key, value));
 
     NanReturnUndefined();
 }
 
-NAN_METHOD(NodeUnQLite::DeleteKV) {
+NAN_METHOD(NodeUnQLite::DeleteKV){
     NanScope();
 
     REQ_STR_ARG(0)
@@ -156,13 +152,66 @@ NAN_METHOD(NodeUnQLite::DeleteKV) {
     NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
 
     NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new NodeUnQLite::AccessWorker(callback, uql, T_UNQLITE_DELETE, key));
+    NanAsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_DELETE, key));
 
     NanReturnUndefined();
+}
+
+int NodeUnQLite::open_db(const char* filename, int mode) {
+    int status = unqlite_open(&(db_), filename, mode);
+    if (status != UNQLITE_OK) {
+        close_db();
+        open_ = false;
+    } else {
+        open_ = true;
+    }
+    return status;
+}
+
+int NodeUnQLite::close_db() {
+    if(!open_){
+        return UNQLITE_OK;
+    }
+    int status = unqlite_close(db_);
+    if (status == UNQLITE_OK) {
+        db_ = NULL;
+        open_ = false;
+    }
+    return status;
+}
+
+bool NodeUnQLite::is_opened() {
+    return open_;
+}
+
+int NodeUnQLite::fetch_kv(std::string& key, std::string& value) {
+    unqlite_int64 val_size;
+    int status = unqlite_kv_fetch(db_, key.c_str(), key.size(), NULL, &val_size);
+    if (status == UNQLITE_OK) {
+        char* buf = new char[val_size];
+        status = unqlite_kv_fetch(db_, key.c_str(), key.size(), buf, &val_size);
+        value.assign(buf, val_size);
+        delete[] buf;
+    }
+    return status;
+}
+
+int NodeUnQLite::store_kv(std::string& key, std::string& value) {
+    return unqlite_kv_store(db_, key.c_str(), key.size(), value.c_str(), value.size());
+}
+
+int NodeUnQLite::append_kv(std::string& key, std::string& value) {
+    return unqlite_kv_append(db_, key.c_str(), key.size(), value.c_str(), value.size());
+}
+
+int NodeUnQLite::delete_kv(std::string& key) {
+    return unqlite_kv_delete(db_, key.c_str(), key.size());
+}
+
 }
 
 void Initialize(Handle<Object> exports) {
-    NodeUnQLite::Init(exports);
+    node_unqlite::NodeUnQLite::Init(exports);
 
     // define constants
     DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OK, OK);
@@ -198,8 +247,10 @@ void Initialize(Handle<Object> exports) {
     DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OPEN_READWRITE, OPEN_READWRITE);
     DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OPEN_READONLY, OPEN_READONLY);
     DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OPEN_MMAP, OPEN_MMAP);
-    DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OPEN_EXCLUSIVE, OPEN_EXCLUSIVE);  // VFS only
-    DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OPEN_TEMP_DB, OPEN_TEMP_DB);      // VFS only
+    DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OPEN_EXCLUSIVE, OPEN_EXCLUSIVE);
+    // VFS only
+    DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OPEN_TEMP_DB, OPEN_TEMP_DB);
+    // VFS only
     DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OPEN_IN_MEMORY, OPEN_IN_MEMORY);
     DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OPEN_OMIT_JOURNALING, OPEN_OMIT_JOURNALING);
     DEFINE_CONSTANT_INTEGER(exports, UNQLITE_OPEN_NOMUTEX, OPEN_NOMUTEX);

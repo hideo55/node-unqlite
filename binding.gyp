@@ -14,7 +14,7 @@
     {
       'target_name': 'node_unqlite',
       'include_dirs': ['unqlite', "<!(node -e \"require('nan')\")"],
-      'sources': ['unqlite/unqlite.c', 'src/node_unqlite.cc'],
+      'sources': ['unqlite/unqlite.c', 'src/node_unqlite_async.cc', 'src/node_unqlite.cc'],
       'cflags': ['-fexceptions'],
       'cflags_cc': ['-fexceptions'],
       'cflags!': ['-fno-exceptions'],
