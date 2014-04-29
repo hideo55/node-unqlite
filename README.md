@@ -21,15 +21,47 @@ db.open(unqlite.OPEN_CREATE, function(err){
 
 ## API
 
-### open([mode], callback)
+### open([mode,] callback)
+
+- The callback gets sigle argument `error`. 
 
 ### store(key, value, callback)
 
+- The callback gets three arguments `(error, key, value)`. 
+
 ### append(key, value, callback)
+
+- The callback gets three arguments `(error, key, value)`. 
 
 ### delete(key, callback)
 
+- The callback gets two arguments `(error, key)`. 
+
 ### fetch(key, callback)
+
+- The callback gets three arguments `(error, key, value)`. 
+
+## Constants
+
+See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/unqlite_open.html)
+
+### OPEN_CREATE
+
+### OPEN_READWRITE
+
+### OPEN_READONLY
+
+### OPEN_MMAP
+
+### OPEN_EXCLUSIVE
+
+### OPEN_TEMP_DB
+
+### OPEN_IN_MEMORY
+
+### OPEN_OMIT_JOURNALING
+
+### OPEN_NOMUTEX
 
 ## UnQLite version
 
