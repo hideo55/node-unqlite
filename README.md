@@ -51,23 +51,23 @@ db.open(unqlite.OPEN_CREATE, function(err){
 
 See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/unqlite_open.html)
 
-### OPEN_CREATE
+- OPEN_CREATE
 
-### OPEN_READWRITE
+- OPEN_READWRITE
 
-### OPEN_READONLY
+- OPEN_READONLY
 
-### OPEN_MMAP
+- OPEN_MMAP
 
-### OPEN_EXCLUSIVE
+- OPEN_EXCLUSIVE
 
-### OPEN_TEMP_DB
+- OPEN_TEMP_DB
 
-### OPEN_IN_MEMORY
+- OPEN_IN_MEMORY
 
-### OPEN_OMIT_JOURNALING
+- OPEN_OMIT_JOURNALING
 
-### OPEN_NOMUTEX
+- OPEN_NOMUTEX
 
 ## Unsupported functions
 
