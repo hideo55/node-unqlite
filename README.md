@@ -23,6 +23,7 @@ db.open(unqlite.OPEN_CREATE, function(err){
 
 ### open([mode,] callback)
 
+- `mode` is database access mode. See <a href="#constants"><code><b>Constants</b></code></a> section.
 - The callback gets sigle argument `error`. 
 
 ### store(key, value, callback)
@@ -41,6 +42,7 @@ db.open(unqlite.OPEN_CREATE, function(err){
 
 - The callback gets three arguments `(error, key, value)`. 
 
+<a name="constants"></a>
 ## Constants
 
 See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/unqlite_open.html)
