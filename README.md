@@ -8,13 +8,26 @@ Node.js binding for [UnQLite](http://unqlite.org/).
 ```JavaScript
 var unqlite = require('unqlite');
 
-var db = unqlite.Database('/path/to/db', unqlite.OPEN_CREATE);
-db.on('open', function(){
+var db = unqlite.Database('/path/to/db');
+db.open(unqlite.OPEN_CREATE, function(err){
+  if(err) throw err;
   db.store('key', 'value', function(err, key, value){
     ...
   });
 });
 ```
+
+## API
+
+### open([mode], callback)
+
+### store(key, value, callback)
+
+### append(key, value, callback)
+
+### delete(key, callback)
+
+### fetch(key, callback)
 
 ## UnQLite version
 
