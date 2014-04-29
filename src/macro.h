@@ -8,6 +8,12 @@
       return ThrowException(Exception::TypeError(String::New("Argument " #I " must be a " #TYPE))); \
   }
 
+// validate the argument type is 'function' or not.
+#define REQ_FUN_ARG(I, VAR) \
+  REQ_ARG_COUNT_AND_TYPE(I, Function) \
+  Local<Function> VAR = Local<Function>::Cast(args[I]);
+
+// validate the argument type is 'string' or not.
 #define REQ_STR_ARG(I) REQ_ARG_COUNT_AND_TYPE(I, String)
 
 #define TRY_CATCH_CALL(context, callback, argc, argv)                          \
@@ -24,12 +30,5 @@
         static_cast<PropertyAttribute>(ReadOnly | DontDelete)                  \
     );
 
-#if NODE_VERSION_AT_LEAST(0,11,0)
-#define __GET_ISOLATE_FOR_NEW v8::Isolate::GetCurrent(),
-#define __GET_ISOLATE_FOR_DISPOSE v8::Isolate::GetCurrent()
-#else
-#define __GET_ISOLATE_FOR_NEW
-#define __GET_ISOLATE_FOR_DISPOSE
-#endif
 
 #endif /* NODE_UNQLITE_MACRO_H */

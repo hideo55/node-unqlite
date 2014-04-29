@@ -20,7 +20,8 @@ describe('open', function() {
   });
 
   it('with callback API', function(done) {
-    var uql = new DB(dbFile, function(err) {
+    var uql = new DB(dbFile);
+    uql.open(function(err) {
       assert.equal(err, null);
       done();
     });
@@ -28,7 +29,7 @@ describe('open', function() {
 
   it('with EventEmitter API', function(done) {
     var uql = new DB(dbFile);
-    uql.on('open', function(err) {
+    uql.open(function(err) {
       assert.equal(err, null);
       done();
     });
@@ -36,32 +37,32 @@ describe('open', function() {
 
   describe('mode', function() {
     it('with READONLY', function(done) {
-      var uql = new DB(dbFile, unqlite.OPEN_READONLY);
-      uql.on('open', function() {
+      var uql = new DB(dbFile);
+      uql.open(unqlite.OPEN_READONLY, function() {
         assert.equal(uql.mode, unqlite.OPEN_READONLY);
         done();
       });
     });
 
     it('with READWRITE', function(done) {
-      var uql = new DB(dbFile, unqlite.OPEN_READWRITE);
-      uql.on('open', function() {
+      var uql = new DB(dbFile);
+      uql.open(unqlite.OPEN_READWRITE,  function() {
         assert.equal(uql.mode, unqlite.OPEN_READWRITE);
         done();
       });
     });
 
     it('with MMAP', function(done) {
-      var uql = new DB(dbFile, unqlite.OPEN_MMAP);
-      uql.on('open', function() {
+      var uql = new DB(dbFile);
+      uql.open(unqlite.OPEN_MMAP, function() {
         assert.equal(uql.mode, unqlite.OPEN_MMAP);
         done();
       });
     });
 
     it('with IN_MEMORY', function(done) {
-      var uql = new DB(dbFile, unqlite.OPEN_IN_MEMORY);
-      uql.on('open', function() {
+      var uql = new DB(dbFile);
+      uql.open(unqlite.OPEN_IN_MEMORY, function() {
         assert.equal(uql.mode, unqlite.OPEN_IN_MEMORY);
         done();
       });
@@ -71,19 +72,19 @@ describe('open', function() {
 
 describe('Key/Value API', function() {
   it('store API', function(done) {
-    var uql = new DB('test/test.db', unqlite.OPEN_IN_MEMORY);
-    uql.on('open', function() {
-      uql.store('foo', 'bar');
-      uql.on('store', function(key, value) {
+    var uql = new DB('test/test.db');
+    uql.open(unqlite.OPEN_IN_MEMORY, function() {
+      uql.store('foo', 'bar', function(err, key, value) {
         assert.equal(key, 'foo');
         assert.equal(value, 'bar');
         done();
       });
     });
   });
+  
   it('fetch API', function(done) {
-    var uql = new DB('test/test.db', unqlite.OPEN_IN_MEMORY);
-    uql.on('open', function() {
+    var uql = new DB('test/test.db');
+    uql.open(unqlite.OPEN_IN_MEMORY, function() {
       uql.store('foo', 'bar', function(err, key, value) {
         uql.fetch(key, function(err, key, value) {
           assert.equal(value, 'bar');
@@ -92,9 +93,10 @@ describe('Key/Value API', function() {
       });
     });
   });
+
   it('append API', function(done) {
-    var uql = new DB('test/test.db', unqlite.OPEN_IN_MEMORY);
-    uql.on('open', function() {
+    var uql = new DB('test/test.db');
+    uql.open(unqlite.OPEN_IN_MEMORY, function() {
       uql.store('foo', 'bar', function() {
         uql.append('foo', 'baz', function(err, key, value) {
           uql.fetch(key, function(err, key, value) {
@@ -105,16 +107,15 @@ describe('Key/Value API', function() {
       });
     });
   });
+  
   it('delete API', function(done) {
-    var uql = new DB('test/test.db', unqlite.OPEN_IN_MEMORY);
-    uql.on('open', function() {
-      uql.store('foo', 'bar', function() {
-        uql.
-        delete ('foo',
-        function(err, key) {
+    var uql = new DB('test/test.db');
+    uql.open(unqlite.OPEN_IN_MEMORY, function() {
+      uql.store('foo', 'bar', function(err, key, value) {
+        uql.delete('foo', function(err, key) {
           uql.fetch(key, function(err, key, value) {
-            assert(err, null);
-            assert.equal(value, '');
+            assert.notEqual(err, null);
+            assert.ok(err.message.match(/^Failed to fetch/));
             done();
           });
         });

@@ -1,94 +1,199 @@
 #if !defined(NODE_UNQLITE_H)
 #define NODE_UNQLITE_H
 
-#include <v8.h>
-#include <node.h>
-#include <node_version.h>
+#include "nan.h"
+
 #include <string>
+#include <sstream>
 #include "macro.h"
+#include <iostream>
 
 extern "C" {
 #include "unqlite.h"
 }
 
-class NodeUnQLite: node::ObjectWrap {
+class NodeUnQLite: public node::ObjectWrap {
 public:
-
-    static v8::Persistent<v8::FunctionTemplate> constructor_template;
-
-    struct Baton {
-        uv_work_t request;
-        v8::Persistent<v8::Function> callback;
-        int status;
-        NodeUnQLite* unqlite;
-
-        Baton(NodeUnQLite* uql, v8::Handle<v8::Function> cb) :
-                status(UNQLITE_OK), unqlite(uql) {
-            unqlite->Ref();
-            request.data = this;
-            callback = v8::Persistent < v8::Function > ::New(__GET_ISOLATE_FOR_NEW cb);
-        }
-
-        virtual ~Baton() {
-            unqlite->Unref();
-            callback.Dispose(__GET_ISOLATE_FOR_DISPOSE);
-        }
-    };
-
-    struct OpenBaton: Baton {
-        std::string filename;
-        int mode;
-
-        OpenBaton(NodeUnQLite* uql_, v8::Handle<v8::Function> cb_, const char* filename_, int mode_) :
-                Baton(uql_, cb_), filename(filename_), mode(mode_) {
-        }
-    };
-
-    struct ExecBaton: Baton {
-        std::string key;
-        std::string value;
-
-        ExecBaton(NodeUnQLite* uql_, v8::Handle<v8::Function> cb_, std::string key_) :
-                Baton(uql_, cb_), key(key_), value() {
-        }
-
-        ExecBaton(NodeUnQLite* uql_, v8::Handle<v8::Function> cb_, std::string key_, std::string val_) :
-                Baton(uql_, cb_), key(key_), value(val_) {
-        }
-    };
 
     NodeUnQLite();
     virtual ~NodeUnQLite();
 
-    static void Init(v8::Handle<v8::Object> target);
-    static v8::Handle<v8::Value> New(const v8::Arguments& args);
-    static v8::Handle<v8::Value> StoreKV(const v8::Arguments& args);
-    static v8::Handle<v8::Value> AppendKV(const v8::Arguments& args);
-    static v8::Handle<v8::Value> DeleteKV(const v8::Arguments& args);
-    static v8::Handle<v8::Value> FetchKV(const v8::Arguments& args);
+    static void Init(v8::Handle<v8::Object> exports);
+    static NAN_METHOD (New);
+    static NAN_METHOD (Open);
+    static NAN_METHOD (StoreKV);
+    static NAN_METHOD (AppendKV);
+    static NAN_METHOD (DeleteKV);
+    static NAN_METHOD (FetchKV);
 
 private:
-    unqlite* db_;
-    bool open;
 
-    static void Work_Open(uv_work_t* req);
-    static void Work_FetchKV(uv_work_t* req);
-    static void Work_StoreKV(uv_work_t* req);
-    static void Work_AppendKV(uv_work_t* req);
-    static void Work_DeleteKV(uv_work_t* req);
-#if NODE_VERSION_AT_LEAST(0,9,4)
-    static void Work_AfterOpen(uv_work_t* req, int status);
-    static void Work_AfterFetchKV(uv_work_t* req, int status);
-    static void Work_AfterStoreKV(uv_work_t* req, int status);
-    static void Work_AfterAppendKV(uv_work_t* req, int status);
-    static void Work_AfterDeleteKV(uv_work_t* req, int status);
-#else
-    static void Work_AfterOpen(uv_work_t* req);
-    static void Work_AfterFetchKV(uv_work_t* req);
-    static void Work_AfterStoreKV(uv_work_t* req);
-    static void Work_AfterAppendKV(uv_work_t* req);
-    static void Work_AfterDeleteKV(uv_work_t* req);
-#endif
+    typedef enum {
+        T_UNQLITE_FETCH, T_UNQLITE_STORE, T_UNQLITE_APPEND, T_UNQLITE_DELETE
+    } UnQLiteAccessType;
+
+    class OpenWorker: public NanAsyncWorker {
+    public:
+        /**
+         * @brief Constructor
+         * @param callback[in] Callback functio object
+         * @param uql[in] NodeUnQLite instance
+         * @param filename[in] Name of the file to open
+         * @param mode[in] UnQLite open mode
+         */
+        OpenWorker(NanCallback *callback, NodeUnQLite* uql, std::string& filename, int mode) :
+                NanAsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK), filename_(filename), mode_(mode) {
+        }
+
+        /**
+         * @brief Open UnQLite file
+         */
+        void Execute() {
+            status_ = unqlite_open(&(unqlite_->db_), filename_.c_str(), mode_);
+            if (status_ != UNQLITE_OK) {
+                unqlite_close(unqlite_->db_);
+                unqlite_->db_ = NULL;
+                std::stringstream ss;
+                ss << "Failed to open: " << status_ << std::endl;
+                errmsg = ss.str().c_str();
+            } else {
+                unqlite_->open_ = true;
+            }
+        }
+
+        /**
+         * @brief Invoke callback function
+         */
+        void HandleOKCallback() {
+            NanScope();
+            v8::Local<v8::Value> argv[] = { NanNewLocal(v8::Null()) };
+            callback->Call(1, argv);
+        }
+
+    private:
+        NodeUnQLite* unqlite_;  /// NodeUnQLite instance
+        int status_;            /// File open status
+        std::string filename_;  /// File name
+        int mode_;              /// Open mode
+    };
+
+    class AccessWorker: public NanAsyncWorker {
+    public:
+        /**
+         * @brief Constructor
+         * @param callback[in] Callback functio object
+         * @param uql[in] NodeUnQLite instance
+         * @param type[in] Access type
+         * @param key[in] Key
+         */
+        AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key) :
+                NanAsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK), type_(type), key_(key), value_() {
+        }
+
+        /**
+         * @brief Constructor
+         * @param callback[in] Callback functio object
+         * @param uql[in] NodeUnQLite instance
+         * @param type[in] Access type
+         * @param key[in] Key
+         * @param value[in] Value
+         */
+        AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key,
+                std::string value) :
+                NanAsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK), type_(type), key_(key), value_(value) {
+        }
+
+        /**
+         * @brief Access to the UnQLite DB
+         */
+        void Execute() {
+            if (!unqlite_->open_) {
+                errmsg = "Not opened";
+                return;
+            }
+
+            switch (type_) {
+                case T_UNQLITE_FETCH:
+                    Fetch();
+                    break;
+                case T_UNQLITE_STORE:
+                    Store();
+                    break;
+                case T_UNQLITE_APPEND:
+                    Append();
+                    break;
+                case T_UNQLITE_DELETE:
+                    Delete();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        /**
+         * @brief Invoke callback function
+         */
+        void HandleOKCallback() {
+            NanScope();
+            v8::Local <v8::Value> argv[] = {
+                    NanNewLocal(v8::Null()),
+                    NanNewLocal(v8::String::New(key_.c_str(), key_.size())),
+                    NanNewLocal(v8::String::New(value_.c_str(), value_.size()))
+            };
+            callback->Call(3, argv);
+        }
+
+    private:
+        NodeUnQLite* unqlite_;
+        int status_;
+        UnQLiteAccessType type_;
+        std::string key_;
+        std::string value_;
+
+        void Fetch() {
+            unqlite_int64 val_size;
+            status_ = unqlite_kv_fetch(unqlite_->db_, key_.c_str(), key_.size(), NULL, &val_size);
+            if (status_ == UNQLITE_OK) {
+                char* buf = new char[val_size];
+                status_ = unqlite_kv_fetch(unqlite_->db_, key_.c_str(), key_.size(), buf, &val_size);
+                value_.assign(buf, val_size);
+                delete[] buf;
+            }
+            setError("fetch");
+        }
+
+        void Store() {
+            status_ = unqlite_kv_store(unqlite_->db_, key_.c_str(), key_.size(), value_.c_str(), value_.size());
+            setError("store");
+
+        }
+
+        void Append() {
+            status_ = unqlite_kv_append(unqlite_->db_, key_.c_str(), key_.size(), value_.c_str(), value_.size());
+            setError("append");
+        }
+
+        void Delete() {
+            key_ = "hoge";
+            unqlite_kv_store(unqlite_->db_, key_.c_str(), key_.size(), value_.c_str(), value_.size());
+            status_ = unqlite_kv_delete(unqlite_->db_, key_.c_str(), key_.size());
+            value_ = "";
+            setError("delete");
+        }
+
+        void setError(const char* type) {
+            if (status_ != UNQLITE_OK) {
+                std::stringstream ss;
+                ss << "Failed to " << type << ": " << status_ << std::endl;
+                errmsg = new char[ss.str().size() + 1];
+                std::memcpy((void*)errmsg, ss.str().c_str(), ss.str().size());
+            }
+        }
+    };
+
+    static v8::Persistent<v8::FunctionTemplate> constructor_template;
+    unqlite* db_;
+    bool open_;
 };
 
 #endif /* NODE_UNQLITE_H */

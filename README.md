@@ -2,9 +2,6 @@
 
 Node.js binding for [UnQLite](http://unqlite.org/).
 
-## Requirement
-
-Node v0.8 or later
 
 ## Usage
 
@@ -18,6 +15,15 @@ db.on('open', function(){
   });
 });
 ```
+
+## UnQLite version
+
+1.1.6
+
+## Requirement
+
+Node v0.8 or later
+
 
 ## Author
 

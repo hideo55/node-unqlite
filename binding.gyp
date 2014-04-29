@@ -13,7 +13,7 @@
   'targets': [
     {
       'target_name': 'node_unqlite',
-      'include_dirs': ['unqlite'],
+      'include_dirs': ['unqlite', "<!(node -e \"require('nan')\")"],
       'sources': ['unqlite/unqlite.c', 'src/node_unqlite.cc'],
       'cflags': ['-fexceptions'],
       'cflags_cc': ['-fexceptions'],

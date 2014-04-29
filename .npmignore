@@ -5,4 +5,5 @@
 .shipit.json
 .travis.yml
 build/
+npm_modules
 
