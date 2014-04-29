@@ -4,6 +4,7 @@
 .lock-wscript
 .shipit.json
 .travis.yml
+.git/
 build/
-npm_modules
+npm_modules/
 
