@@ -1,7 +1,7 @@
 # unqlite
 
 Node.js binding for [UnQLite](http://unqlite.org/).
-
+This mdoule provides simple Key/Value store functions of UnQLite.
 
  [![Build Status](https://secure.travis-ci.org/hideo55/node-unqlite.png)](http://travis-ci.org/hideo55/node-unqlite)
 
@@ -69,7 +69,12 @@ See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/u
 
 ### OPEN_NOMUTEX
 
-## UnQLite version
+## Unsupported functions
+
+- Document Store (JSON via Jx9)
+- Manual Transaction Manager
+
+## Version of UnQLite
 
 1.1.6
 
