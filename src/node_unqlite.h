@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 #include "macro.h"
-#include <iostream>
+#include <memory>
 
 extern "C" {
 #include "unqlite.h"
