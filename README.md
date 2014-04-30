@@ -10,7 +10,7 @@ This mdoule provides simple Key/Value store functions of UnQLite.
 ```JavaScript
 var unqlite = require('unqlite');
 
-var db = unqlite.Database('/path/to/db');
+var db = new unqlite.Database('/path/to/db');
 db.open(unqlite.OPEN_CREATE, function(err){
   if(err) throw err;
   db.store('key', 'value', function(err, key, value){
@@ -21,30 +21,54 @@ db.open(unqlite.OPEN_CREATE, function(err){
 
 ## API
 
+### new Database(filename)
+
+Create new instance.
+
+- `filename` is file-path of UnQLite database.
+
 ### open([mode,] callback)
 
+Opening a new database handle.
+
 - `mode` is database access mode. See <a href="#constants"><code><b>Constants</b></code></a> section.
-- The callback gets sigle argument `error`. 
+- `callback` will called with a sigle argument `error`. 
 
 ### close(callback)
 
-- The callback gets sigle argument `error`. 
+Closing a database handle.
+
+- `callback` will called with a sigle argument `error`. 
 
 ### store(key, value, callback)
 
-- The callback gets three arguments `(error, key, value)`. 
+Store records in the database.
+
+- `key` is record key.
+- `value` is record data.
+- `callback` will called with a three arguments `(error, key, value)`. 
 
 ### append(key, value, callback)
 
-- The callback gets three arguments `(error, key, value)`. 
+Append data to a database record.
 
-### delete(key, callback)
-
-- The callback gets two arguments `(error, key)`. 
+- `key` is record key.
+- `value` is record data.
+- `callback` will called with a three arguments `(error, key, value)`. 
 
 ### fetch(key, callback)
 
-- The callback gets three arguments `(error, key, value)`. 
+Fetch a record from the database.
+
+- `key` is record key.
+- `callback` will called with a three arguments `(error, key, value)`. 
+
+### delete(key, callback)
+
+Remove a record from the database.
+
+- `key` is record key.
+- `callback` will called with a two arguments `(error, key)`. 
 
 <a name="constants"></a>
 ## Constants
@@ -82,7 +106,6 @@ See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/u
 
 Node v0.8 or later
 
-
 ## Author
 
 Hideaki Ohno  &lt;hide.o.j55{at}gmail.com&gt;
@@ -91,7 +114,7 @@ Hideaki Ohno  &lt;hide.o.j55{at}gmail.com&gt;
 
 (The MIT License)
 
-Copyright (c) 2012 Hideaki Ohno &lt;hide.o.j55{at}gmail.com&gt;
+Copyright (c) 2013 Hideaki Ohno &lt;hide.o.j55{at}gmail.com&gt;
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
