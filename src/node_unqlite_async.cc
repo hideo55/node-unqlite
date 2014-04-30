@@ -71,7 +71,7 @@ AccessWorker::AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAcces
 void AccessWorker::Execute() {
     if (!unqlite_->is_opened()) {
         std::string err = "Database not opened.";
-        errmsg = strndup(err..c_str(), err.size());
+        errmsg = strndup(err.c_str(), err.size());
         return;
     }
 
