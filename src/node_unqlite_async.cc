@@ -20,8 +20,7 @@ void OpenWorker::Execute() {
         } else {
             ss << status_;
         }
-        errmsg = new char[ss.str().size() + 1];
-        std::memcpy((void*) errmsg, ss.str().c_str(), ss.str().size());
+        errmsg = strndup(ss.str().c_str(), ss.str().size());
     }
 }
 
@@ -48,8 +47,7 @@ void CloseWorker::Execute() {
         } else {
             ss << status_;
         }
-        errmsg = new char[ss.str().size() + 1];
-        std::memcpy((void*) errmsg, ss.str().c_str(), ss.str().size());
+        errmsg = strndup(ss.str().c_str(), ss.str().size());
     }
 }
 
@@ -73,8 +71,7 @@ AccessWorker::AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAcces
 void AccessWorker::Execute() {
     if (!unqlite_->is_opened()) {
         std::string err = "Database not opened.";
-        errmsg = new char[err.size() + 1];
-        std::memcpy((void*) errmsg, err.c_str(), err.size());
+        errmsg = strndup(err..c_str(), err.size());
         return;
     }
 
@@ -121,8 +118,7 @@ void AccessWorker::setError(const char* type) {
         } else {
             ss << status_;
         }
-        errmsg = new char[ss.str().size() + 1];
-        std::memcpy((void*) errmsg, ss.str().c_str(), ss.str().size());
+        errmsg = strndup(ss.str().c_str(), ss.str().size());
     }
 }
 
