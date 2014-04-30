@@ -217,7 +217,7 @@ void NodeUnQLite::get_error_message(std::string& message) {
     }
 }
 
-}
+} // namespace node_unqlite
 
 void Initialize(Handle<Object> exports) {
     node_unqlite::NodeUnQLite::Init(exports);

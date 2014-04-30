@@ -1,3 +1,6 @@
+#if !defined(NODE_UNQLITE_ASYNC_H)
+#define NODE_UNQLITE_ASYNC_H
+
 #include "nan.h"
 #include "node_unqlite.h"
 
@@ -107,4 +110,6 @@ private:
     void setError(const char* type);
 };
 
-} // namespace unqlite
+} // namespace node_unqlite
+
+#endif // NODE_UNQLITE_ASYNC_H

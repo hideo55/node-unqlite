@@ -112,6 +112,6 @@ private:
     bool open_;
 };
 
-}
+} // namespace node_unqlite
 
 #endif /* NODE_UNQLITE_H */

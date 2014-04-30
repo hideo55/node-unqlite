@@ -122,4 +122,4 @@ void AccessWorker::setError(const char* type) {
     }
 }
 
-} // namespace unqlite
+} // namespace node_unqlite
