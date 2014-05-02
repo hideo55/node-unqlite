@@ -32,7 +32,7 @@ Create new instance.
 Opening a new database handle.
 
 - `mode` is database access mode. See <a href="#constants"><code><b>Constants</b></code></a> section.
-  - If the `mode` parameter is omitted, the database is opened in "OPEN_CREATE" mode.
+  - If the `mode` parameter is omitted, the database is opened in `OPEN_CREATE` mode.
 - `callback` will called with a sigle argument `error`. 
 
 ### close(callback)
