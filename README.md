@@ -32,6 +32,7 @@ Create new instance.
 Opening a new database handle.
 
 - `mode` is database access mode. See <a href="#constants"><code><b>Constants</b></code></a> section.
+  - If the `mode` parameter is omitted, the database is opened in "OPEN_CREATE" mode.
 - `callback` will called with a sigle argument `error`. 
 
 ### close(callback)
@@ -76,22 +77,23 @@ Remove a record from the database.
 See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/unqlite_open.html)
 
 - OPEN_CREATE
-
+  -  If the database does not exists, it is created. Otherwise, it is opened with read+write privileges.
 - OPEN_READWRITE
-
+  - Open the database with read+write privileges.
 - OPEN_READONLY
-
+  - Open the database in a read-only mode.
 - OPEN_MMAP
-
+  - Obtain a read-only memory view of the whole database.
 - OPEN_EXCLUSIVE
-
+  - Creates a new file, only if it does not already exist. If the file exists, it fails.
 - OPEN_TEMP_DB
-
+  - A private, temporary on-disk database will be created. This private database will be automatically deleted as soon as the database connection is closed.
 - OPEN_IN_MEMORY
-
+  - A private, in-memory database will be created. The in-memory database will vanish when the database connection is closed.
 - OPEN_OMIT_JOURNALING
-
+  - (Not recommended) Disable journaling for this database. In other words, you will not be able to rollback your database after a crash or power failure. This flag is automatically set for temporary database.
 - OPEN_NOMUTEX
+  - (Not recommended) Disable the private recursive mutex associated with each database handle. When set, you should not share this handle between multiple threads. Otherwise, the result is undefined.
 
 ## Unsupported functions
 
