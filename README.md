@@ -95,7 +95,7 @@ See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/u
 - **OPEN_NOMUTEX**
   - (Not recommended) Disable the private recursive mutex associated with each database handle. When set, you should not share this handle between multiple threads. Otherwise, the result is undefined.
 
-## Unsupported functions
+## Unsupported features
 
 - Document Store (JSON via Jx9)
 - Manual Transaction Manager
