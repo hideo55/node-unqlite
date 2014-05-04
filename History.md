@@ -1,5 +1,11 @@
 # Revision history for unqlite
 
+0.1.2 / 2014-05-05
+==================
+
+  * Delete unimplemented constants
+  * Improved document
+
 0.1.1 / 2014-04-30
 ==================
 
