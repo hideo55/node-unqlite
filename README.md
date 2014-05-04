@@ -90,10 +90,6 @@ See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/u
   - A private, temporary on-disk database will be created. This private database will be automatically deleted as soon as the database connection is closed.
 - **OPEN_IN_MEMORY**
   - A private, in-memory database will be created. The in-memory database will vanish when the database connection is closed.
-- **OPEN_OMIT_JOURNALING**
-  - (Not recommended) Disable journaling for this database. In other words, you will not be able to rollback your database after a crash or power failure. This flag is automatically set for temporary database.
-- **OPEN_NOMUTEX**
-  - (Not recommended) Disable the private recursive mutex associated with each database handle. When set, you should not share this handle between multiple threads. Otherwise, the result is undefined.
 
 ## Unsupported features
 
