@@ -45,7 +45,7 @@ CloseWorker::CloseWorker(NanCallback *callback, NodeUnQLite* uql) :
 
 void CloseWorker::Execute() {
     status_ = unqlite_->close_db();
-        SetErrorMessage("Failed to close");
+    SetErrorMessage("Failed to close");
 }
 
 void CloseWorker::HandleOKCallback() {
