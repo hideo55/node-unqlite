@@ -30,9 +30,9 @@ protected:
 
     /**
      * Set error message for async worker
-     * @param[in] message Error message
+     * @param message[in] Error message
      */
-    void set_error_message(const char* message);
+    void SetErrorMessage(const char* message);
 };
 
 /**
