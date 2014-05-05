@@ -8,16 +8,18 @@ UnQLiteAsyncWorker::UnQLiteAsyncWorker(NanCallback *callback, NodeUnQLite* uql) 
 }
 
 void UnQLiteAsyncWorker::set_error_message(const char* message) {
-    std::string errLog;
-    unqlite_->get_error_message(errLog);
-    std::stringstream ss;
-    ss << message << " : ";
-    if (errLog.size() > 0) {
-        ss << errLog;
-    } else {
-        ss << status_;
+    if (status_ != UNQLITE_OK) {
+        std::string errLog;
+        unqlite_->get_error_message(errLog);
+        std::stringstream ss;
+        ss << message << " : ";
+        if (errLog.size() > 0) {
+            ss << errLog;
+        } else {
+            ss << status_;
+        }
+        errmsg = strndup(ss.str().c_str(), ss.str().size());
     }
-    errmsg = strndup(ss.str().c_str(), ss.str().size());
 }
 
 // OpenWorker
@@ -27,9 +29,7 @@ OpenWorker::OpenWorker(NanCallback *callback, NodeUnQLite* uql, std::string& fil
 
 void OpenWorker::Execute() {
     status_ = unqlite_->open_db(filename_.c_str(), mode_);
-    if (status_ != UNQLITE_OK) {
-        set_error_message("Failed to open");
-    }
+    set_error_message("Failed to open");
 }
 
 void OpenWorker::HandleOKCallback() {
@@ -45,9 +45,7 @@ CloseWorker::CloseWorker(NanCallback *callback, NodeUnQLite* uql) :
 
 void CloseWorker::Execute() {
     status_ = unqlite_->close_db();
-    if (status_ != UNQLITE_OK) {
         set_error_message("Failed to close");
-    }
 }
 
 void CloseWorker::HandleOKCallback() {
@@ -77,19 +75,19 @@ void AccessWorker::Execute() {
     switch (type_) {
         case T_UNQLITE_FETCH:
             status_ = unqlite_->fetch_kv(key_, value_);
-            set_error_message("fetch");
+            set_error_message("Failed to fetch");
             break;
         case T_UNQLITE_STORE:
             status_ = unqlite_->store_kv(key_, value_);
-            set_error_message("store");
+            set_error_message("Failed to store");
             break;
         case T_UNQLITE_APPEND:
             status_ = unqlite_->append_kv(key_, value_);
-            set_error_message("append");
+            set_error_message("Failed to append");
             break;
         case T_UNQLITE_DELETE:
             status_ = unqlite_->delete_kv(key_);
-            set_error_message("delete");
+            set_error_message("Failed to delete");
             break;
         default:
             break;
@@ -104,14 +102,6 @@ void AccessWorker::HandleOKCallback() {
         NanNewLocal(v8::String::New(value_.c_str(), value_.size()))
     };
     callback->Call(3, argv);
-}
-
-void AccessWorker::set_error_message(const char* type) {
-    if (status_ != UNQLITE_OK) {
-        std::stringstream ss;
-        ss << "Failed to " << type;
-        UnQLiteAsyncWorker::set_error_message(ss.str().c_str());
-    }
 }
 
 } // namespace node_unqlite

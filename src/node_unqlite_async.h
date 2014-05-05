@@ -123,8 +123,6 @@ private:
     UnQLiteAccessType type_;
     std::string key_;
     std::string value_;
-
-    void set_error_message(const char* type);
 };
 
 } // namespace node_unqlite
