@@ -10,10 +10,35 @@ typedef enum {
     T_UNQLITE_FETCH, T_UNQLITE_STORE, T_UNQLITE_APPEND, T_UNQLITE_DELETE
 } UnQLiteAccessType;
 
+
+/**
+ * @brief Base class of UnQLite asynchronous worker
+ */
+class UnQLiteAsyncWorker : public NanAsyncWorker {
+public:
+    /**
+     * @brief Constructor
+     * @param callback[in] Callback functio object
+     * @param uql[in] NodeUnQLite instance
+     */
+    UnQLiteAsyncWorker(NanCallback *callback, NodeUnQLite* uql);
+
+
+protected:
+    NodeUnQLite* unqlite_;  /// NodeUnQLite instance
+    int status_;            /// File open status
+
+    /**
+     * Set error message for async worker
+     * @param[in] message Error message
+     */
+    void set_error_message(const char* message);
+};
+
 /**
  * @brief Asynchronous worker for open database
  */
-class OpenWorker: public NanAsyncWorker {
+class OpenWorker: public UnQLiteAsyncWorker {
 public:
     /**
      * @brief Constructor
@@ -35,8 +60,6 @@ public:
     void HandleOKCallback();
 
 private:
-    NodeUnQLite* unqlite_;  /// NodeUnQLite instance
-    int status_;            /// File open status
     std::string filename_;  /// File name
     int mode_;              /// Open mode
 };
@@ -44,7 +67,7 @@ private:
 /**
  * @brief Asynchronous worker for close database
  */
-class CloseWorker: public NanAsyncWorker {
+class CloseWorker: public UnQLiteAsyncWorker {
 public:
     /**
      * @brief Constructor
@@ -62,14 +85,10 @@ public:
      * @brief Invoke callback function
      */
     void HandleOKCallback();
-
-private:
-    NodeUnQLite* unqlite_;  /// NodeUnQLite instance
-    int status_;            /// File open status
 };
 
 // Asyncronous worker for database access
-class AccessWorker: public NanAsyncWorker {
+class AccessWorker: public UnQLiteAsyncWorker {
 public:
     /**
      * @brief Constructor
@@ -101,13 +120,11 @@ public:
     void HandleOKCallback();
 
 private:
-    NodeUnQLite* unqlite_;
-    int status_;
     UnQLiteAccessType type_;
     std::string key_;
     std::string value_;
 
-    void setError(const char* type);
+    void set_error_message(const char* type);
 };
 
 } // namespace node_unqlite

@@ -3,24 +3,32 @@
 
 namespace node_unqlite {
 
+UnQLiteAsyncWorker::UnQLiteAsyncWorker(NanCallback *callback, NodeUnQLite* uql) :
+        NanAsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK) {
+}
+
+void UnQLiteAsyncWorker::set_error_message(const char* message) {
+    std::string errLog;
+    unqlite_->get_error_message(errLog);
+    std::stringstream ss;
+    ss << message << " : ";
+    if (errLog.size() > 0) {
+        ss << errLog;
+    } else {
+        ss << status_;
+    }
+    errmsg = strndup(ss.str().c_str(), ss.str().size());
+}
+
 // OpenWorker
 OpenWorker::OpenWorker(NanCallback *callback, NodeUnQLite* uql, std::string& filename, int mode) :
-        NanAsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK), filename_(filename), mode_(mode) {
+        UnQLiteAsyncWorker(callback, uql), filename_(filename), mode_(mode) {
 }
 
 void OpenWorker::Execute() {
     status_ = unqlite_->open_db(filename_.c_str(), mode_);
     if (status_ != UNQLITE_OK) {
-        std::string errLog;
-        unqlite_->get_error_message(errLog);
-        std::stringstream ss;
-        ss << "Failed to open: ";
-        if (errLog.size() > 0) {
-            ss << errLog;
-        } else {
-            ss << status_;
-        }
-        errmsg = strndup(ss.str().c_str(), ss.str().size());
+        set_error_message("Failed to open");
     }
 }
 
@@ -32,22 +40,13 @@ void OpenWorker::HandleOKCallback() {
 
 // CloseWorker
 CloseWorker::CloseWorker(NanCallback *callback, NodeUnQLite* uql) :
-        NanAsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK) {
+        UnQLiteAsyncWorker(callback, uql) {
 }
 
 void CloseWorker::Execute() {
     status_ = unqlite_->close_db();
     if (status_ != UNQLITE_OK) {
-        std::string errLog;
-        unqlite_->get_error_message(errLog);
-        std::stringstream ss;
-        ss << "Failed to close: ";
-        if (errLog.size() > 0) {
-            ss << errLog;
-        } else {
-            ss << status_;
-        }
-        errmsg = strndup(ss.str().c_str(), ss.str().size());
+        set_error_message("Failed to close");
     }
 }
 
@@ -60,12 +59,12 @@ void CloseWorker::HandleOKCallback() {
 // AccessWorker
 
 AccessWorker::AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key) :
-        NanAsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK), type_(type), key_(key), value_() {
+        UnQLiteAsyncWorker(callback, uql), type_(type), key_(key), value_() {
 }
 
 AccessWorker::AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key,
         std::string value) :
-        NanAsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK), type_(type), key_(key), value_(value) {
+        UnQLiteAsyncWorker(callback, uql), type_(type), key_(key), value_(value) {
 }
 
 void AccessWorker::Execute() {
@@ -78,19 +77,19 @@ void AccessWorker::Execute() {
     switch (type_) {
         case T_UNQLITE_FETCH:
             status_ = unqlite_->fetch_kv(key_, value_);
-            setError("fetch");
+            set_error_message("fetch");
             break;
         case T_UNQLITE_STORE:
             status_ = unqlite_->store_kv(key_, value_);
-            setError("store");
+            set_error_message("store");
             break;
         case T_UNQLITE_APPEND:
             status_ = unqlite_->append_kv(key_, value_);
-            setError("append");
+            set_error_message("append");
             break;
         case T_UNQLITE_DELETE:
             status_ = unqlite_->delete_kv(key_);
-            setError("delete");
+            set_error_message("delete");
             break;
         default:
             break;
@@ -107,18 +106,11 @@ void AccessWorker::HandleOKCallback() {
     callback->Call(3, argv);
 }
 
-void AccessWorker::setError(const char* type) {
+void AccessWorker::set_error_message(const char* type) {
     if (status_ != UNQLITE_OK) {
-        std::string errLog;
-        unqlite_->get_error_message(errLog);
         std::stringstream ss;
-        ss << "Failed to " << type << ": ";
-        if (errLog.size() > 0) {
-            ss << errLog;
-        } else {
-            ss << status_;
-        }
-        errmsg = strndup(ss.str().c_str(), ss.str().size());
+        ss << "Failed to " << type;
+        UnQLiteAsyncWorker::set_error_message(ss.str().c_str());
     }
 }
 
