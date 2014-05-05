@@ -5,7 +5,7 @@
     },
     "vc": {
         "Git": {
-            "PushTo": "origin"
+            "PushTo": "--tags origin"
         }
     }
 }
