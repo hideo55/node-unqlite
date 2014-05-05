@@ -86,10 +86,15 @@ See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/u
   - Obtain a read-only memory view of the whole database.
 - **OPEN_EXCLUSIVE**
   - Creates a new file, only if it does not already exist. If the file exists, it fails.
-- **OPEN_TEMP_DB**
+- **OPEN_TEMP**
   - A private, temporary on-disk database will be created. This private database will be automatically deleted as soon as the database connection is closed.
 - **OPEN_IN_MEMORY**
   - A private, in-memory database will be created. The in-memory database will vanish when the database connection is closed.
+- **OPEN_OMIT_JOURNALING**
+  - (Not recommended) Disable journaling for this database. In other words, you will not be able to rollback your database after a crash or power failure. This flag is automatically set for temporary database.
+- **OPEN_NOMUTEX**
+  - (Not recommended) Disable the private recursive mutex associated with each database handle. When set, you should not share this handle between multiple threads. Otherwise, the result is undefined.
+
 
 ## Unsupported features
 
