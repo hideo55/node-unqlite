@@ -21,7 +21,7 @@ Persistent<FunctionTemplate> NodeUnQLite::constructor_template;
 void NodeUnQLite::Init(Handle<Object> exports) {
     NanScope();
 
-    Local < FunctionTemplate > t = FunctionTemplate::New(NodeUnQLite::New);
+    Local < FunctionTemplate > t = NanNew<FunctionTemplate>(NodeUnQLite::New);
     NanAssignPersistent(constructor_template, t);
     t->InstanceTemplate()->SetInternalFieldCount(1);
     t->SetClassName(NanSymbol("Database"));
@@ -74,7 +74,7 @@ NAN_METHOD(NodeUnQLite::Open){
     REQ_FUN_ARG(pos, cb);
 
     NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
-    args.This()->Set(String::NewSymbol("mode"), Integer::New(mode), ReadOnly);
+    args.This()->Set(NanSymbol("mode"), NanNew<Integer>(mode), ReadOnly);
     std::string filename = *String::Utf8Value(args.This()->Get(NanSymbol("filename")));
 
     NanCallback *callback = new NanCallback(cb);

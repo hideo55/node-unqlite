@@ -163,16 +163,18 @@ describe('exceptions', function() {
         done();
       };
     });
+    
     it('callback is not function', function(done) {
       try {
         var uql = new DB('');
-        uql.open('', '');
+        uql.open(0, 0);
         assert.fail('Must be fail');
       } catch(e) {
         assert.ok( e instanceof TypeError);
-        assert.ok(e.message.match(/Argument 1 must be a Function/));
+        assert.ok(e.message.match(/Argument 2 must be a Function/));
         done();
       };
     });
+    
   });
 });
