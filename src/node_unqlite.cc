@@ -22,7 +22,7 @@ void NodeUnQLite::Init(Handle<Object> exports) {
     NanScope();
 
     Local < FunctionTemplate > t = FunctionTemplate::New(NodeUnQLite::New);
-    NanAssignPersistent(v8::FunctionTemplate, constructor_template, t);
+    NanAssignPersistent(constructor_template, t);
     t->InstanceTemplate()->SetInternalFieldCount(1);
     t->SetClassName(NanSymbol("Database"));
 

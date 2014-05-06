@@ -34,7 +34,7 @@ void OpenWorker::Execute() {
 
 void OpenWorker::HandleOKCallback() {
     NanScope();
-    v8::Local<v8::Value> argv[] = {NanNewLocal(v8::Null())};
+    v8::Local<v8::Value> argv[] = {NanNew(NanNull())};
     callback->Call(1, argv);
 }
 
@@ -50,7 +50,7 @@ void CloseWorker::Execute() {
 
 void CloseWorker::HandleOKCallback() {
     NanScope();
-    v8::Local<v8::Value> argv[] = {NanNewLocal(v8::Null())};
+    v8::Local<v8::Value> argv[] = {NanNew(NanNull())};
     callback->Call(1, argv);
 }
 
@@ -97,9 +97,9 @@ void AccessWorker::Execute() {
 void AccessWorker::HandleOKCallback() {
     NanScope();
     v8::Local <v8::Value> argv[] = {
-        NanNewLocal(v8::Null()),
-        NanNewLocal(v8::String::New(key_.c_str(), key_.size())),
-        NanNewLocal(v8::String::New(value_.c_str(), value_.size()))
+        NanNew(NanNull()),
+        NanNew<v8::String>(key_.c_str(), key_.size()),
+        NanNew<v8::String>(value_.c_str(), value_.size())
     };
     callback->Call(3, argv);
 }
