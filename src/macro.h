@@ -1,11 +1,17 @@
 #if !defined(NODE_UNQLITE_MACRO_H)
 #define NODE_UNQLITE_MACRO_H
 
+#include <sstream>
+
 #define REQ_ARG_COUNT_AND_TYPE(I, TYPE) \
   if (args.Length() < (I + 1) ) { \
-      NanThrowRangeError("A least " #I " arguments are required"); \
+      std::stringstream __ss; \
+      __ss << "A least " << I + 1 << " arguments are required"; \
+      NanThrowRangeError(__ss.str().c_str()); \
   } else if (!args[I]->Is##TYPE()) { \
-      NanThrowTypeError("Argument " #I " must be a " #TYPE); \
+      std::stringstream __ss; \
+      __ss << "Argument " << I + 1 << " must be a " #TYPE; \
+      NanThrowTypeError(__ss.str().c_str()); \
   }
 
 // validate the argument type is 'function' or not.
