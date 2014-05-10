@@ -5,6 +5,15 @@ This mdoule provides simple Key/Value store functions of UnQLite.
 
  [![Build Status](https://secure.travis-ci.org/hideo55/node-unqlite.png)](http://travis-ci.org/hideo55/node-unqlite)
 
+## Installation
+
+    $ npm install unqlite
+    
+or
+
+    $ git clone https://github.com/hideo55/node-unqlite.git
+    $ npm install ./node-unqlite
+
 ## Usage
 
 ```JavaScript
