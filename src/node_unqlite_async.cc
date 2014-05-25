@@ -19,7 +19,6 @@ void UnQLiteAsyncWorker::SetErrorMessage(const char* message) {
             ss << status_;
         }
         NanAsyncWorker::SetErrorMessage(ss.str().c_str());
-        //errmsg = strndup(ss.str().c_str(), ss.str().size());
     }
 }
 
