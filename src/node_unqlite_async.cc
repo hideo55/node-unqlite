@@ -18,7 +18,8 @@ void UnQLiteAsyncWorker::SetErrorMessage(const char* message) {
         } else {
             ss << status_;
         }
-        errmsg = strndup(ss.str().c_str(), ss.str().size());
+        NanAsyncWorker::SetErrorMessage(ss.str().c_str());
+        //errmsg = strndup(ss.str().c_str(), ss.str().size());
     }
 }
 
@@ -34,7 +35,7 @@ void OpenWorker::Execute() {
 
 void OpenWorker::HandleOKCallback() {
     NanScope();
-    v8::Local<v8::Value> argv[] = {NanNew(NanNull())};
+    v8::Local<v8::Value> argv[] = {NanNull()};
     callback->Call(1, argv);
 }
 
@@ -50,7 +51,7 @@ void CloseWorker::Execute() {
 
 void CloseWorker::HandleOKCallback() {
     NanScope();
-    v8::Local<v8::Value> argv[] = {NanNew(NanNull())};
+    v8::Local<v8::Value> argv[] = {NanNull()};
     callback->Call(1, argv);
 }
 
@@ -68,7 +69,7 @@ AccessWorker::AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAcces
 void AccessWorker::Execute() {
     if (!unqlite_->is_opened()) {
         std::string err = "Database not opened.";
-        errmsg = strndup(err.c_str(), err.size());
+        NanAsyncWorker::SetErrorMessage(err.c_str());
         return;
     }
 
@@ -97,7 +98,7 @@ void AccessWorker::Execute() {
 void AccessWorker::HandleOKCallback() {
     NanScope();
     v8::Local <v8::Value> argv[] = {
-        NanNew(NanNull()),
+        NanNull(),
         NanNew<v8::String>(key_.c_str(), key_.size()),
         NanNew<v8::String>(value_.c_str(), value_.size())
     };
