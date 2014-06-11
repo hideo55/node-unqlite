@@ -107,6 +107,7 @@ See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/u
 
 ## Unsupported features
 
+- Cursor
 - Document Store (JSON via Jx9)
 - Manual Transaction Manager
 
