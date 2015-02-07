@@ -31,8 +31,8 @@
     }
 
 #define DEFINE_CONSTANT_INTEGER(target, constant, name)                        \
-    (target)->Set(                                                             \
-        NanSymbol(#name),                                              \
+    (target)->ForceSet(                                                             \
+        NanNew<String>(#name),                                              \
         NanNew<Integer>(constant),                                                \
         static_cast<PropertyAttribute>(ReadOnly | DontDelete)                  \
     );

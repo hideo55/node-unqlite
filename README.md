@@ -3,7 +3,16 @@
 Node.js binding for [UnQLite](http://unqlite.org/).
 This mdoule provides simple Key/Value store functions of UnQLite.
 
- [![Build Status](https://secure.travis-ci.org/hideo55/node-unqlite.png)](http://travis-ci.org/hideo55/node-unqlite)
+ [![Build Status](https://travis-ci.org/hideo55/node-unqlite.svg?branch=master)](http://travis-ci.org/hideo55/node-unqlite)
+
+## Installation
+
+    $ npm install unqlite
+    
+or
+
+    $ git clone https://github.com/hideo55/node-unqlite.git
+    $ npm install ./node-unqlite
 
 ## Usage
 
@@ -98,6 +107,7 @@ See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/u
 
 ## Unsupported features
 
+- Cursor
 - Document Store (JSON via Jx9)
 - Manual Transaction Manager
 

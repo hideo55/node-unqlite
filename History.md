@@ -1,5 +1,21 @@
 # Revision history for unqlite
 
+0.3.0 / 2015-02-07
+==================
+
+   * Change way to make constant values.
+   * io.js ready
+
+0.2.4 / 2014-06-12
+==================
+
+  * Update docs
+
+0.2.3 / 2014-05-25
+==================
+
+  * Change version of nan(1.10)
+
 0.2.2 / 2014-05-08
 ==================
 

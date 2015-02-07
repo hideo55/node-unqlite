@@ -24,7 +24,7 @@ void NodeUnQLite::Init(Handle<Object> exports) {
     Local < FunctionTemplate > t = NanNew<FunctionTemplate>(NodeUnQLite::New);
     NanAssignPersistent(constructor_template, t);
     t->InstanceTemplate()->SetInternalFieldCount(1);
-    t->SetClassName(NanSymbol("Database"));
+    t->SetClassName(NanNew<String>("Database"));
 
     NODE_SET_PROTOTYPE_METHOD(t, "open", Open);
     NODE_SET_PROTOTYPE_METHOD(t, "close", Close);
@@ -33,7 +33,7 @@ void NodeUnQLite::Init(Handle<Object> exports) {
     NODE_SET_PROTOTYPE_METHOD(t, "append", AppendKV);
     NODE_SET_PROTOTYPE_METHOD(t, "delete", DeleteKV);
 
-    exports->Set(NanSymbol("Database"), t->GetFunction());
+    exports->Set(NanNew<String>("Database"), t->GetFunction());
 }
 
 NodeUnQLite::NodeUnQLite() :
@@ -54,7 +54,7 @@ NAN_METHOD(NodeUnQLite::New){
 
     NodeUnQLite* uql = new NodeUnQLite();
     uql->Wrap(args.Holder());
-    args.This()->Set(NanSymbol("filename"), args[0]->ToString(), ReadOnly);
+    args.This()->ForceSet(NanNew<String>("filename"), args[0]->ToString(), ReadOnly);
 
     NanReturnValue(args.Holder());
 }
@@ -74,8 +74,8 @@ NAN_METHOD(NodeUnQLite::Open){
     REQ_FUN_ARG(pos, cb);
 
     NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
-    args.This()->Set(NanSymbol("mode"), NanNew<Integer>(mode), ReadOnly);
-    std::string filename = *String::Utf8Value(args.This()->Get(NanSymbol("filename")));
+    args.This()->ForceSet(NanNew<String>("mode"), NanNew<Integer>(mode), ReadOnly);
+    std::string filename = *String::Utf8Value(args.This()->Get(NanNew<String>("filename")));
 
     NanCallback *callback = new NanCallback(cb);
     NanAsyncQueueWorker(new OpenWorker(callback, uql, filename, mode));

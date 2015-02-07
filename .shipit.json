@@ -2,10 +2,5 @@
     "steps": ["FindVersion", "ChangeVersion", "CheckChangeLog", "Commit", "Tag", "Publish"],
     "CheckChangeLog": {
         "files": ["History.md"]
-    },
-    "vc": {
-        "Git": {
-            "PushTo": "--tags origin"
-        }
     }
 }
