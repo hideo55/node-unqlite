@@ -1,5 +1,11 @@
 # Revision history for unqlite
 
+0.3.0 / 2015-02-07
+==================
+
+   * Change way to make constant values.
+   * io.js ready
+
 0.2.4 / 2014-06-12
 ==================
 
