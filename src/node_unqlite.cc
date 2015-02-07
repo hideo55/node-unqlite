@@ -54,7 +54,7 @@ NAN_METHOD(NodeUnQLite::New){
 
     NodeUnQLite* uql = new NodeUnQLite();
     uql->Wrap(args.Holder());
-    args.This()->Set(NanNew<String>("filename"), args[0]->ToString(), ReadOnly);
+    args.This()->ForceSet(NanNew<String>("filename"), args[0]->ToString(), ReadOnly);
 
     NanReturnValue(args.Holder());
 }
@@ -74,7 +74,7 @@ NAN_METHOD(NodeUnQLite::Open){
     REQ_FUN_ARG(pos, cb);
 
     NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
-    args.This()->Set(NanNew<String>("mode"), NanNew<Integer>(mode), ReadOnly);
+    args.This()->ForceSet(NanNew<String>("mode"), NanNew<Integer>(mode), ReadOnly);
     std::string filename = *String::Utf8Value(args.This()->Get(NanNew<String>("filename")));
 
     NanCallback *callback = new NanCallback(cb);
