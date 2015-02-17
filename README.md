@@ -118,6 +118,7 @@ See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/u
 ## Requirement
 
 Node v0.8 or later
+io.js v1.0 or later
 
 ## Author
 
