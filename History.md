@@ -1,5 +1,10 @@
 # Revision history for unqlite
 
+0.3.1 / 2015-05-09
+==================
+
+   * Update version of NAN
+
 0.3.0 / 2015-02-07
 ==================
 
