@@ -3,7 +3,8 @@
 Node.js binding for [UnQLite](http://unqlite.org/).
 This mdoule provides simple Key/Value store functions of UnQLite.
 
- [![Build Status](https://travis-ci.org/hideo55/node-unqlite.svg?branch=master)](http://travis-ci.org/hideo55/node-unqlite)
+[![Build Status](https://travis-ci.org/hideo55/node-unqlite.svg?branch=master)](http://travis-ci.org/hideo55/node-unqlite)
+[![npm](https://img.shields.io/npm/v/unqlite.svg)](https://www.npmjs.com/package/unqlite)
 
 ## Installation
 
