@@ -23,8 +23,10 @@ var unqlite = require('unqlite');
 var db = new unqlite.Database('/path/to/db');
 db.open(unqlite.OPEN_CREATE, function(err){
   if(err) throw err;
-  db.store('key', 'value', function(err, key, value){
-    ...
+  db.store('example key', 'example value', function(err, key, value){
+    db.close(function(err){// commit change to the database
+        ...
+    });
   });
 });
 ```
@@ -39,7 +41,7 @@ Create new instance.
 
 ### open([mode,] callback)
 
-Opening a new database handle.
+Opening a new database handle and start transaction.
 
 - `mode` is database access mode. See <a href="#constants"><code><b>Constants</b></code></a> section.
   - If the `mode` parameter is omitted, the database is opened in `OPEN_CREATE` mode.
@@ -47,7 +49,7 @@ Opening a new database handle.
 
 ### close(callback)
 
-Closing a database handle.
+Closing a database handle and commit all changes to the database.
 
 - `callback` will called with a sigle argument `error`. 
 
