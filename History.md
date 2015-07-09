@@ -1,5 +1,10 @@
 # Revision history for unqlite
 
+0.3.2 / 2015-07-10
+==================
+
+   * Update document
+
 0.3.1 / 2015-05-09
 ==================
 
