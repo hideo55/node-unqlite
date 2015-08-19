@@ -1,5 +1,10 @@
 # Revision history for unqlite
 
+0.3.3/ 2015-08-20
+=================
+
+   * Add support for io.js v3
+
 0.3.2 / 2015-07-10
 ==================
 
