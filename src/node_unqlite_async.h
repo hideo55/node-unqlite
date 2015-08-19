@@ -1,7 +1,6 @@
 #if !defined(NODE_UNQLITE_ASYNC_H)
 #define NODE_UNQLITE_ASYNC_H
 
-#include "nan.h"
 #include "node_unqlite.h"
 
 namespace node_unqlite {
@@ -14,14 +13,14 @@ typedef enum {
 /**
  * @brief Base class of UnQLite asynchronous worker
  */
-class UnQLiteAsyncWorker : public NanAsyncWorker {
+class UnQLiteAsyncWorker : public Nan::AsyncWorker {
 public:
     /**
      * @brief Constructor
      * @param callback[in] Callback functio object
      * @param uql[in] NodeUnQLite instance
      */
-    UnQLiteAsyncWorker(NanCallback *callback, NodeUnQLite* uql);
+    UnQLiteAsyncWorker(Nan::Callback *callback, NodeUnQLite* uql);
 
 
 protected:
@@ -47,7 +46,7 @@ public:
      * @param filename[in] Name of the file to open
      * @param mode[in] UnQLite open mode
      */
-    OpenWorker(NanCallback *callback, NodeUnQLite* uql, std::string& filename, int mode);
+    OpenWorker(Nan::Callback *callback, NodeUnQLite* uql, std::string& filename, int mode);
 
     /**
      * @brief Open UnQLite file
@@ -74,7 +73,7 @@ public:
      * @param callback[in] Callback functio object
      * @param uql[in] NodeUnQLite instance
      */
-    CloseWorker(NanCallback *callback, NodeUnQLite* uql);
+    CloseWorker(Nan::Callback *callback, NodeUnQLite* uql);
 
     /**
      * @brief Open UnQLite file
@@ -97,7 +96,7 @@ public:
      * @param type[in] Access type
      * @param key[in] Key
      */
-    AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key);
+    AccessWorker(Nan::Callback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key);
 
     /**
      * @brief Constructor
@@ -107,7 +106,7 @@ public:
      * @param key[in] Key
      * @param value[in] Value
      */
-    AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key, std::string value);
+    AccessWorker(Nan::Callback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key, std::string value);
 
     /**
      * @brief Access to the UnQLite DB

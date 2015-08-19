@@ -16,24 +16,24 @@ using namespace node;
 
 namespace node_unqlite {
 
-Persistent<FunctionTemplate> NodeUnQLite::constructor_template;
+Nan::Persistent<FunctionTemplate> NodeUnQLite::constructor_template;
 
 void NodeUnQLite::Init(Handle<Object> exports) {
-    NanScope();
+    Nan::HandleScope scope;
 
-    Local < FunctionTemplate > t = NanNew<FunctionTemplate>(NodeUnQLite::New);
-    NanAssignPersistent(constructor_template, t);
+    Local < FunctionTemplate > t = Nan::New<FunctionTemplate>(NodeUnQLite::New);
+    constructor_template.Reset(t);
     t->InstanceTemplate()->SetInternalFieldCount(1);
-    t->SetClassName(NanNew<String>("Database"));
+    t->SetClassName(Nan::New<String>("Database").ToLocalChecked());
 
-    NODE_SET_PROTOTYPE_METHOD(t, "open", Open);
-    NODE_SET_PROTOTYPE_METHOD(t, "close", Close);
-    NODE_SET_PROTOTYPE_METHOD(t, "fetch", FetchKV);
-    NODE_SET_PROTOTYPE_METHOD(t, "store", StoreKV);
-    NODE_SET_PROTOTYPE_METHOD(t, "append", AppendKV);
-    NODE_SET_PROTOTYPE_METHOD(t, "delete", DeleteKV);
+    Nan::SetPrototypeMethod(t, "open", Open);
+    Nan::SetPrototypeMethod(t, "close", Close);
+    Nan::SetPrototypeMethod(t, "fetch", FetchKV);
+    Nan::SetPrototypeMethod(t, "store", StoreKV);
+    Nan::SetPrototypeMethod(t, "append", AppendKV);
+    Nan::SetPrototypeMethod(t, "delete", DeleteKV);
 
-    exports->Set(NanNew<String>("Database"), t->GetFunction());
+    exports->Set(Nan::New<String>("Database").ToLocalChecked(), t->GetFunction());
 }
 
 NodeUnQLite::NodeUnQLite() :
@@ -47,114 +47,114 @@ NodeUnQLite::~NodeUnQLite() {
 }
 
 NAN_METHOD(NodeUnQLite::New){
-    NanScope();
+    Nan::HandleScope scope;
 
     REQ_STR_ARG(0)
-    std::string filename = *String::Utf8Value(args[0]->ToString());
+    std::string filename = *String::Utf8Value(info[0]->ToString());
 
     NodeUnQLite* uql = new NodeUnQLite();
-    uql->Wrap(args.Holder());
-    args.This()->ForceSet(NanNew<String>("filename"), args[0]->ToString(), ReadOnly);
+    uql->Wrap(info.Holder());
+    info.This()->ForceSet(Nan::New<String>("filename").ToLocalChecked(), info[0]->ToString(), ReadOnly);
 
-    NanReturnValue(args.Holder());
+    info.GetReturnValue().Set(info.Holder());
 }
 
 NAN_METHOD(NodeUnQLite::Open){
-    NanScope();
+    Nan::HandleScope scope;
 
     int pos = 0;
 
     int mode;
-    if (args.Length() >= pos && args[pos]->IsInt32()) {
-        mode = args[pos++]->Int32Value();
+    if (info.Length() >= pos && info[pos]->IsInt32()) {
+        mode = info[pos++]->Int32Value();
     } else {
         mode = UNQLITE_OPEN_CREATE;
     }
 
     REQ_FUN_ARG(pos, cb);
 
-    NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
-    args.This()->ForceSet(NanNew<String>("mode"), NanNew<Integer>(mode), ReadOnly);
-    std::string filename = *String::Utf8Value(args.This()->Get(NanNew<String>("filename")));
+    NodeUnQLite* uql = Unwrap<NodeUnQLite>(info.Holder());
+    info.This()->ForceSet(Nan::New<String>("mode").ToLocalChecked(), Nan::New<Integer>(mode), ReadOnly);
+    std::string filename = *String::Utf8Value(info.This()->Get(Nan::New<String>("filename").ToLocalChecked()));
 
-    NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new OpenWorker(callback, uql, filename, mode));
-    NanReturnUndefined();
+    Nan::Callback *callback = new Nan::Callback(cb);
+    Nan::AsyncQueueWorker(new OpenWorker(callback, uql, filename, mode));
+    info.GetReturnValue().SetUndefined();
 }
 
 NAN_METHOD(NodeUnQLite::Close) {
-    NanScope();
+    Nan::HandleScope scope;
     REQ_FUN_ARG(0, cb);
-    NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
-    NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new CloseWorker(callback, uql));
-    NanReturnUndefined();
+    NodeUnQLite* uql = Unwrap<NodeUnQLite>(info.Holder());
+    Nan::Callback *callback = new Nan::Callback(cb);
+    Nan::AsyncQueueWorker(new CloseWorker(callback, uql));
+    info.GetReturnValue().SetUndefined();
 }
 
 NAN_METHOD(NodeUnQLite::FetchKV){
-    NanScope();
+    Nan::HandleScope scope;
 
     REQ_STR_ARG(0)
-    std::string key = *String::Utf8Value(args[0]->ToString());
+    std::string key = *String::Utf8Value(info[0]->ToString());
     REQ_FUN_ARG(1, cb);
 
-    NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
+    NodeUnQLite* uql = Unwrap<NodeUnQLite>(info.Holder());
 
-    NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_FETCH, key));
+    Nan::Callback *callback = new Nan::Callback(cb);
+    Nan::AsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_FETCH, key));
 
-    NanReturnUndefined();
+    info.GetReturnValue().SetUndefined();
 }
 
 NAN_METHOD(NodeUnQLite::StoreKV){
-    NanScope();
+    Nan::HandleScope scope;
     REQ_STR_ARG(0)
-    std::string key = *String::Utf8Value(args[0]->ToString());
+    std::string key = *String::Utf8Value(info[0]->ToString());
     REQ_STR_ARG(1)
-    std::string value = *String::Utf8Value(args[1]->ToString());
+    std::string value = *String::Utf8Value(info[1]->ToString());
 
     REQ_FUN_ARG(2, cb);
 
-    NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
+    NodeUnQLite* uql = Unwrap<NodeUnQLite>(info.Holder());
 
-    NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_STORE, key, value));
+    Nan::Callback *callback = new Nan::Callback(cb);
+    Nan::AsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_STORE, key, value));
 
-    NanReturnUndefined();
+    info.GetReturnValue().SetUndefined();
 }
 
 NAN_METHOD(NodeUnQLite::AppendKV){
-    NanScope();
+    Nan::HandleScope scope;
 
     REQ_STR_ARG(0)
-    std::string key = *String::Utf8Value(args[0]->ToString());
+    std::string key = *String::Utf8Value(info[0]->ToString());
     REQ_STR_ARG(1)
-    std::string value = *String::Utf8Value(args[1]->ToString());
+    std::string value = *String::Utf8Value(info[1]->ToString());
 
     REQ_FUN_ARG(2, cb);
 
-    NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
+    NodeUnQLite* uql = Unwrap<NodeUnQLite>(info.Holder());
 
-    NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_APPEND, key, value));
+    Nan::Callback *callback = new Nan::Callback(cb);
+    Nan::AsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_APPEND, key, value));
 
-    NanReturnUndefined();
+    info.GetReturnValue().SetUndefined();
 }
 
 NAN_METHOD(NodeUnQLite::DeleteKV){
-    NanScope();
+    Nan::HandleScope scope;
 
     REQ_STR_ARG(0)
-    std::string key = *String::Utf8Value(args[0]->ToString());
+    std::string key = *String::Utf8Value(info[0]->ToString());
 
     REQ_FUN_ARG(1, cb);
 
-    NodeUnQLite* uql = Unwrap<NodeUnQLite>(args.Holder());
+    NodeUnQLite* uql = Unwrap<NodeUnQLite>(info.Holder());
 
-    NanCallback *callback = new NanCallback(cb);
-    NanAsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_DELETE, key));
+    Nan::Callback *callback = new Nan::Callback(cb);
+    Nan::AsyncQueueWorker(new AccessWorker(callback, uql, T_UNQLITE_DELETE, key));
 
-    NanReturnUndefined();
+    info.GetReturnValue().SetUndefined();
 }
 
 int NodeUnQLite::open_db(const char* filename, int mode) {

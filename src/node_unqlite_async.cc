@@ -3,8 +3,8 @@
 
 namespace node_unqlite {
 
-UnQLiteAsyncWorker::UnQLiteAsyncWorker(NanCallback *callback, NodeUnQLite* uql) :
-        NanAsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK) {
+UnQLiteAsyncWorker::UnQLiteAsyncWorker(Nan::Callback *callback, NodeUnQLite* uql) :
+        Nan::AsyncWorker(callback), unqlite_(uql), status_(UNQLITE_OK) {
 }
 
 void UnQLiteAsyncWorker::SetErrorMessage(const char* message) {
@@ -18,12 +18,12 @@ void UnQLiteAsyncWorker::SetErrorMessage(const char* message) {
         } else {
             ss << status_;
         }
-        NanAsyncWorker::SetErrorMessage(ss.str().c_str());
+        Nan::AsyncWorker::SetErrorMessage(ss.str().c_str());
     }
 }
 
 // OpenWorker
-OpenWorker::OpenWorker(NanCallback *callback, NodeUnQLite* uql, std::string& filename, int mode) :
+OpenWorker::OpenWorker(Nan::Callback *callback, NodeUnQLite* uql, std::string& filename, int mode) :
         UnQLiteAsyncWorker(callback, uql), filename_(filename), mode_(mode) {
 }
 
@@ -33,13 +33,13 @@ void OpenWorker::Execute() {
 }
 
 void OpenWorker::HandleOKCallback() {
-    NanScope();
-    v8::Local<v8::Value> argv[] = {NanNull()};
+    Nan::HandleScope scope;
+    v8::Local<v8::Value> argv[] = {Nan::Null()};
     callback->Call(1, argv);
 }
 
 // CloseWorker
-CloseWorker::CloseWorker(NanCallback *callback, NodeUnQLite* uql) :
+CloseWorker::CloseWorker(Nan::Callback *callback, NodeUnQLite* uql) :
         UnQLiteAsyncWorker(callback, uql) {
 }
 
@@ -49,18 +49,18 @@ void CloseWorker::Execute() {
 }
 
 void CloseWorker::HandleOKCallback() {
-    NanScope();
-    v8::Local<v8::Value> argv[] = {NanNull()};
+    Nan::HandleScope scope;
+    v8::Local<v8::Value> argv[] = {Nan::Null()};
     callback->Call(1, argv);
 }
 
 // AccessWorker
 
-AccessWorker::AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key) :
+AccessWorker::AccessWorker(Nan::Callback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key) :
         UnQLiteAsyncWorker(callback, uql), type_(type), key_(key), value_() {
 }
 
-AccessWorker::AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key,
+AccessWorker::AccessWorker(Nan::Callback *callback, NodeUnQLite* uql, UnQLiteAccessType type, std::string key,
         std::string value) :
         UnQLiteAsyncWorker(callback, uql), type_(type), key_(key), value_(value) {
 }
@@ -68,7 +68,7 @@ AccessWorker::AccessWorker(NanCallback *callback, NodeUnQLite* uql, UnQLiteAcces
 void AccessWorker::Execute() {
     if (!unqlite_->is_opened()) {
         std::string err = "Database not opened.";
-        NanAsyncWorker::SetErrorMessage(err.c_str());
+        Nan::AsyncWorker::SetErrorMessage(err.c_str());
         return;
     }
 
@@ -95,11 +95,11 @@ void AccessWorker::Execute() {
 }
 
 void AccessWorker::HandleOKCallback() {
-    NanScope();
+    Nan::HandleScope scope;
     v8::Local <v8::Value> argv[] = {
-        NanNull(),
-        NanNew<v8::String>(key_.c_str(), key_.size()),
-        NanNew<v8::String>(value_.c_str(), value_.size())
+        Nan::Null(),
+        Nan::New<v8::String>(key_.c_str(), key_.size()).ToLocalChecked(),
+        Nan::New<v8::String>(value_.c_str(), value_.size()).ToLocalChecked()
     };
     callback->Call(3, argv);
 }
