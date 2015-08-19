@@ -5,20 +5,20 @@
 #include <sstream>
 
 #define REQ_ARG_COUNT_AND_TYPE(I, TYPE) \
-  if (args.Length() < (I + 1) ) { \
+  if (info.Length() < (I + 1) ) { \
       std::stringstream __ss; \
       __ss << "A least " << I + 1 << " arguments are required"; \
-      return NanThrowRangeError(__ss.str().c_str()); \
-  } else if (!args[I]->Is##TYPE()) { \
+      return Nan::ThrowRangeError(__ss.str().c_str()); \
+  } else if (!info[I]->Is##TYPE()) { \
       std::stringstream __ss; \
       __ss << "Argument " << I + 1 << " must be a " #TYPE; \
-      return NanThrowTypeError(__ss.str().c_str()); \
+      return Nan::ThrowTypeError(__ss.str().c_str()); \
   }
 
 // validate the argument type is 'function' or not.
 #define REQ_FUN_ARG(I, VAR) \
   REQ_ARG_COUNT_AND_TYPE(I, Function) \
-  Local<Function> VAR = args[I].As<Function>();
+  Local<Function> VAR = info[I].As<Function>();
 
 // validate the argument type is 'string' or not.
 #define REQ_STR_ARG(I) REQ_ARG_COUNT_AND_TYPE(I, String)
@@ -32,8 +32,8 @@
 
 #define DEFINE_CONSTANT_INTEGER(target, constant, name)                        \
     (target)->ForceSet(                                                             \
-        NanNew<String>(#name),                                              \
-        NanNew<Integer>(constant),                                                \
+        Nan::New<String>(#name).ToLocalChecked(),                                              \
+        Nan::New<Integer>(constant),                                                \
         static_cast<PropertyAttribute>(ReadOnly | DontDelete)                  \
     );
 

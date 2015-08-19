@@ -1,7 +1,7 @@
 #if !defined(NODE_UNQLITE_H)
 #define NODE_UNQLITE_H
 
-#include "nan.h"
+#include <nan.h>
 
 #include <string>
 #include <sstream>
@@ -107,7 +107,7 @@ public:
 
 
 private:
-    static v8::Persistent<v8::FunctionTemplate> constructor_template;
+    static Nan::Persistent<v8::FunctionTemplate> constructor_template;
     unqlite* db_;
     bool open_;
 };
