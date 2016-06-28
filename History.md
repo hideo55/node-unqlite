@@ -1,7 +1,12 @@
 # Revision history for unqlite
 
-0.3.3/ 2015-08-20
-=================
+0.3.4 / 2016-06-29
+==================
+
+   * Update version of NAN
+
+0.3.3 / 2015-08-20
+==================
 
    * Add support for io.js v3
 
