@@ -3,8 +3,8 @@
 #define _UNQLITE_H_
 /*
  * Symisc UnQLite: An Embeddable NoSQL (Post Modern) Database Engine.
- * Copyright (C) 2012-2013, Symisc Systems http://unqlite.org/
- * Version 1.1.6
+ * Copyright (C) 2012-2016, Symisc Systems http://unqlite.org/
+ * Version 1.1.7
  * For information on licensing, redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES
  * please contact Symisc Systems via:
  *       legal@symisc.net
@@ -14,7 +14,7 @@
  *      http://unqlite.org/licensing.html
  */
 /*
- * Copyright (C) 2012, 2013 Symisc Systems, S.U.A.R.L [M.I.A.G Mrad Chems Eddine <chm@symisc.net>].
+ * Copyright (C) 2012, 2016 Symisc Systems, S.U.A.R.L [M.I.A.G Mrad Chems Eddine <chm@symisc.net>].
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- /* $SymiscID: unqlite.h v1.1 UNIX|WIN32/64 2012-11-02 02:10 stable <chm@symisc.net> $ */
+ /* $SymiscID: unqlite.h v1.2 Win10 2106-12-02 00:04:12 stable <chm@symisc.net>  $ */
 #include <stdarg.h> /* needed for the definition of va_list */
 /*
  * Compile time engine version, signature, identification in the symisc source tree
@@ -54,13 +54,13 @@
  * version number and Y is the minor version number and Z is the release
  * number.
  */
-#define UNQLITE_VERSION "1.1.6"
+#define UNQLITE_VERSION "1.1.7"
 /*
  * The UNQLITE_VERSION_NUMBER C preprocessor macro resolves to an integer
  * with the value (X*1000000 + Y*1000 + Z) where X, Y, and Z are the same
  * numbers used in [UNQLITE_VERSION].
  */
-#define UNQLITE_VERSION_NUMBER 1001006
+#define UNQLITE_VERSION_NUMBER 1001007
 /*
  * The UNQLITE_SIG C preprocessor macro evaluates to a string
  * literal which is the public signature of the unqlite engine.
@@ -68,7 +68,7 @@
  * generated Server MIME header as follows:
  *   Server: YourWebServer/x.x unqlite/x.x.x \r\n
  */
-#define UNQLITE_SIG "unqlite/1.1.6"
+#define UNQLITE_SIG "unqlite/1.1.7"
 /*
  * UnQLite identification in the Symisc source tree:
  * Each particular check-in of a particular software released
@@ -85,7 +85,7 @@
  *   licensing@symisc.net
  *   contact@symisc.net
  */
-#define UNQLITE_COPYRIGHT "Copyright (C) Symisc Systems, S.U.A.R.L [Mrad Chems Eddine <chm@symisc.net>] 2012-2013, http://unqlite.org/"
+#define UNQLITE_COPYRIGHT "Copyright (C) Symisc Systems, S.U.A.R.L [Mrad Chems Eddine <chm@symisc.net>] 2012-2016, http://unqlite.org/"
 
 /* Forward declaration to public objects */
 typedef struct unqlite_io_methods unqlite_io_methods;
@@ -648,7 +648,7 @@ struct unqlite_vfs {
  * is called page 1.  0 is used to represent "not a page".
  * A page number is an unsigned 64-bit integer.
  */
-typedef sxu64 pgno_t;
+typedef sxu64 pgno;
 /*
  * A database disk page is represented by an instance
  * of the follwoing structure.
@@ -658,7 +658,7 @@ struct unqlite_page
 {
   unsigned char *zData;       /* Content of this page */
   void *pUserData;            /* Extra content */
-  pgno_t pgno;                  /* Page number for this page */
+  pgno pgno;                  /* Page number for this page */
 };
 /*
  * UnQLite handle to the underlying Key/Value Storage Engine (See below).
@@ -678,8 +678,8 @@ struct unqlite_kv_io
 									 */
 	unqlite_kv_methods *pMethods;   /* Underlying storage engine */
 	/* Pager methods */
-	int (*xGet)(unqlite_kv_handle,pgno_t,unqlite_page **);
-	int (*xLookup)(unqlite_kv_handle,pgno_t,unqlite_page **);
+	int (*xGet)(unqlite_kv_handle,pgno,unqlite_page **);
+	int (*xLookup)(unqlite_kv_handle,pgno,unqlite_page **);
 	int (*xNew)(unqlite_kv_handle,unqlite_page **);
 	int (*xWrite)(unqlite_page *);
 	int (*xDontWrite)(unqlite_page *);
@@ -750,7 +750,7 @@ struct unqlite_kv_methods
   int (*xInit)(unqlite_kv_engine *,int iPageSize);
   void (*xRelease)(unqlite_kv_engine *);
   int (*xConfig)(unqlite_kv_engine *,int op,va_list ap);
-  int (*xOpen)(unqlite_kv_engine *,pgno_t);
+  int (*xOpen)(unqlite_kv_engine *,pgno);
   int (*xReplace)(
 	  unqlite_kv_engine *,
 	  const void *pKey,int nKeyLen,
@@ -802,6 +802,7 @@ struct unqlite_kv_methods
 UNQLITE_APIEXPORT int unqlite_open(unqlite **ppDB,const char *zFilename,unsigned int iMode);
 UNQLITE_APIEXPORT int unqlite_config(unqlite *pDb,int nOp,...);
 UNQLITE_APIEXPORT int unqlite_close(unqlite *pDb);
+
 
 /* Key/Value (KV) Store Interfaces */
 UNQLITE_APIEXPORT int unqlite_kv_store(unqlite *pDb,const void *pKey,int nKeyLen,const void *pData,unqlite_int64 nDataLen);
