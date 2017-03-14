@@ -116,12 +116,11 @@ See also [http://unqlite.org/c_api/unqlite_open.html](http://unqlite.org/c_api/u
 
 ## Version of UnQLite
 
-1.1.6
+1.1.7
 
 ## Requirement
 
-Node v0.8 or later
-io.js v1.0 or later
+Node v0.12 or later
 
 ## Author
 
@@ -131,7 +130,7 @@ Hideaki Ohno  &lt;hide.o.j55{at}gmail.com&gt;
 
 (The MIT License)
 
-Copyright (c) 2013 Hideaki Ohno &lt;hide.o.j55{at}gmail.com&gt;
+Copyright (c) 2013-2017 Hideaki Ohno &lt;hide.o.j55{at}gmail.com&gt;
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
