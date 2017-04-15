@@ -3,6 +3,7 @@
   "version": "0.3.4",
   "description": "Node.js binding of UnQLite",
   "main": "lib/unqlite.js",
+  "types": "typings/index.d.ts",
   "scripts": {
     "test": "mocha -R spec test/test.js"
   },

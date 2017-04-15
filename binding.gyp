@@ -1,15 +1,4 @@
 {
-  'conditions': [
-      ['OS=="win"', {
-        'variables': {
-          'copy_command%': 'copy',
-        },
-      },{
-        'variables': {
-          'copy_command%': 'cp',
-        },
-      }]
-  ],
   'targets': [
     {
       'target_name': 'node_unqlite',
@@ -33,16 +22,12 @@
       'target_name': 'action_after_build',
       'type': 'none',
       'dependencies': [ 'node_unqlite' ],
-      'actions': [
+      'copies': [
         {
-          'action_name': 'move_node_module',
-          'inputs': [
+          'destination': 'lib',
+          'files': [
             '<@(PRODUCT_DIR)/node_unqlite.node'
-          ],
-          'outputs': [
-            'lib/node_unqlite.node'
-          ],
-          'action': ['<@(copy_command)', '<@(PRODUCT_DIR)/node_unqlite.node', 'lib/node_unqlite.node']
+          ]
         }
       ]
     }
