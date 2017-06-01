@@ -31,7 +31,7 @@
     }
 
 #define DEFINE_CONSTANT_INTEGER(target, constant, name)                        \
-    (target)->ForceSet(                                                             \
+    Nan::ForceSet(target,                                                             \
         Nan::New<String>(#name).ToLocalChecked(),                                              \
         Nan::New<Integer>(constant),                                                \
         static_cast<PropertyAttribute>(ReadOnly | DontDelete)                  \
