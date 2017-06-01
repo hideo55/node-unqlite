@@ -1,5 +1,11 @@
 # Revision history for unqlite
 
+0.3.5 / 2017-06-01
+==================
+
+   * Add workaround for gyp issue: nodejs/node-gyp#1151
+   * Use Nan::ForceSet() instead of v8::Object::ForceSet()
+
 0.3.4 / 2016-06-29
 ==================
 
